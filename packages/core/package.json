@@ -1,0 +1,28 @@
+{
+  "name": "@singletn/core",
+  "version": "0.0.1",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/singletn/singletn"
+  },
+  "author": {
+    "name": "Nic Reichert",
+    "url": "https://github.com/nicreichert"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p ./tsconfig.json && tsc -p ./tsconfig-cjs.json"
+  },
+  "dependencies": {
+    "utility-types": "^3.7.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4"
+  }
+}
