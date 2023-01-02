@@ -10,7 +10,7 @@
   "type": "module",
   "license": "MIT",
   "repository": {
-    "url": "https://github.com/singletn/singletn"
+    "url": "https://github.com/singletn/singletn/tree/master/packages/local-storage"
   },
   "author": {
     "name": "Nic Reichert",

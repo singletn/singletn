@@ -31,7 +31,7 @@ build:
 	cd packages/core && $(YARN) build
 	cd packages/local-storage && $(YARN) build
 	cd packages/indexeddb && $(YARN) build
-	cd packages/use-singletone && $(YARN) build
+	cd packages/react-singletn && $(YARN) build
 
 .PHONY: publish
 publish:
@@ -39,4 +39,4 @@ publish:
 	cd packages/core && $(NPM) publish
 	cd packages/local-storage && $(NPM) publish
 	cd packages/indexeddb && $(NPM) publish
-	cd packages/use-singletone && $(NPM) publish
+	cd packages/react-singletn && $(NPM) publish

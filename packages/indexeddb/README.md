@@ -9,20 +9,20 @@ The implementation is the same as using the `Singletone` from [@singletn/core](.
 ```js
 import { IndexedDBSingletone } from '@singletn/container-indexeddb'
 
-interface User {
+interface UserState {
   name: string
   email: string
   phoneNumber: string
 }
 
-export class UserContainer extends IndexedDBSingletone<User> {
+export class User extends IndexedDBSingletone<UserState> {
   state = {
     name: '',
     email: '',
     phoneNumber: '',
   }
 
-  public setUser = (user: User) => this.setState(user)
+  public setUser = (user: UserState) => this.setState(user)
 
   public setName = (name) => this.setState({ name })
 
@@ -39,7 +39,7 @@ Anytime that you use `clearSingletones` from [@singletn/core](../singletn-core),
 If, however, you'd like to manually trigger a deletion of the database for any given container, you can call the `clearDB` method:
 
 ```js
-export class UserContainer extends IndexedDBSingletone<User> {
+export class User extends IndexedDBSingletone<UserState> {
   // ...
 
   public cleanup = () => this.clearDB()
@@ -53,4 +53,4 @@ export class UserContainer extends IndexedDBSingletone<User> {
 `singletn` also allows you to use different base `Containers` to store your states in other ways. Read more about it in the subprojects:
 
 - [@singletn/core](../singletn-core)
-- [@singletn/container-local-storage](../singletn-container-local-storage)
+- [@singletn/container-local-storage](../local-storage)

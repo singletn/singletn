@@ -1,4 +1,4 @@
-import { Class } from 'utility-types'
+type Class<T> = new (...args: any[]) => T
 
 type Listener = (obj: { nextState: any; prevState: any }) => void
 
@@ -22,7 +22,7 @@ export class Emitter {
 }
 
 export interface SingletoneType<T = any> {
-  setState: (updater: Partial<T> | ((prevState: T) => Partial<T> | null)) => void
+  setState: (updater: Partial<T> | ((prevState: T) => Partial<T> | null), silent?: boolean) => void
   state: T
   destroy: () => void
   __destroyInternalCleanup?: () => void
@@ -58,7 +58,7 @@ export const clearSingletones = () => {
   Array.from(singletonesMap.keys()).forEach(key => {
     const singletone = getSingletone(key)
     singletone.destroy()
-    singletone.__destroyInternalCleanup && singletone.__destroyInternalCleanup()
+    singletone.__destroyInternalCleanup?.()
   })
 
   singletonesMap.clear()
@@ -96,7 +96,7 @@ export const deleteSingletone = <C extends SingletoneType>(singletone: C | Class
   emittersMap.delete(c)
 
   c.destroy()
-  c.__destroyInternalCleanup && c.__destroyInternalCleanup()
+  c.__destroyInternalCleanup?.()
 }
 
 export const getSingletone = <C extends SingletoneType>(singletone: C | Class<C>): C =>
@@ -107,13 +107,27 @@ export const getSingletone = <C extends SingletoneType>(singletone: C | Class<C>
 export class Singletone<State = any> {
   public state!: State
 
-  public setState = (updater: Partial<State> | ((prevState: State) => Partial<State> | null)) => {
+  public setState = (
+    updater: Partial<State> | ((prevState: State) => Partial<State> | null),
+    silent?: boolean,
+  ) => {
     const nextState = updater instanceof Function ? updater(this.state) : updater
     if (nextState) {
       const prevState = this.state
       this.state =
         nextState instanceof Object ? Object.assign({}, this.state, nextState) : nextState
-      getEmitter(this).emit({ nextState: this.state, prevState })
+
+      if (!silent) {
+        getEmitter(this).emit({ nextState: this.state, prevState })
+      }
+
+      // console.log(
+      //   new Error()?.stack
+      //     ?.toString()
+      //     .split('at ')[2]
+      //     // .match(/at \w+\.\w+/)?.[1]
+      //     .split('.')[1],
+      // )
     }
   }
 

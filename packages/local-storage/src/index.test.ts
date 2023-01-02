@@ -14,7 +14,7 @@ const defaultState = {
 
 class ObjectContainerLocalStorage extends LocalStorageSingletone<ObjectContainerState> {
   constructor() {
-    super(defaultState)
+    super('ObjectContainerLocalStorage', defaultState)
   }
 
   public setName = (name: string) => this.setState({ name })

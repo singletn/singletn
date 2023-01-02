@@ -9,22 +9,24 @@ When extending `LocalStorageSingletone`, there's a small requirement you need to
 ```js
 import { LocalStorageSingletone } from '@singletn/container-local-storage'
 
-interface User {
+interface UserState {
   name: string
   email: string
   phoneNumber: string
 }
 
-export class UserContainer extends LocalStorageSingletone<User> {
+export class User extends LocalStorageSingletone<UserState> {
   constructor() {
-    super({
+    // First parameter is used to prefix all the keys for this singletone.
+    // Make sure this key is unique to avoid having broken data.
+    super('userData', {
       name: '',
       email: '',
       phoneNumber: '',
     })
   }
 
-  public setUser = (user: User) => this.setState(user)
+  public setUser = (user: UserState) => this.setState(user)
 
   public setName = (name) => this.setState({ name })
 
@@ -34,4 +36,11 @@ export class UserContainer extends LocalStorageSingletone<User> {
 }
 ```
 
-The `constructor` is necessary so that the initial state can use the stored data and have the default values as fallbacks.
+The `constructor` is necessary so that the initial state can use the stored data keys and have the default values as fallbacks. The constructor params are:
+
+
+| Name          | Description |
+| ------------- | ----------- |
+| `singletoneKey` | Unique key to be used to prefix all keys on local storage that refers to this singletone |
+| `initialState`  | A state to be used as a fallback for when the local storage does not contain any definition for the keys expected from the state |
+

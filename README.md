@@ -1,15 +1,18 @@
-# singletn
+# singletn &#8194;[![GitHub license](https://img.shields.io/badge/license-MIT-purple.svg)](https://github.com/facebook/react/blob/main/LICENSE)&#8194;[![npm version](https://img.shields.io/npm/v/@singletn/core.svg?style=flat)](https://www.npmjs.com/package/@singletn/core)
+
+## About
+
+`singletn` is a different way to handle your states. It uses classes and a well known `setState` API (same as [React.Component](https://reactjs.org/docs/react-component.html)).
+
+It's on its own framework agnostic. It allows for code to be shared amongst different apps and requires only a simple implementation to be used by any framework.
+
+### Quick links
+
+If you're looking to use `singletn` with [react](https://reactjs.org/), refer to [react-singletn](./packages/react-singletn).
 
 ## Projects
 
-- [singletn/core](./packages/singletn-core)
-- [singletn/use-singletone](./packages/singletn-use-singletone)
-- [singletn/container-stencil-decorator](./packages/singletn-stencil-decorator)
-- [singletn/container-indexeddb](./packages/singletn-container-indexeddb)
-- [singletn/container-local-storage](./packages/singletn-container-local-storage)
-
-## Notes
-
-`singletn` is a new way to handle your states. It uses classes and a well known `setState` API (same as [React.Component](https://reactjs.org/docs/react-component.html)).
-
-It utilises [rxjs](https://github.com/ReactiveX/rxjs) in order to provide with reactive behaviour when the stored state is updated.
+- [@singletn/core](./packages/core)
+- [@singletn/react-singletn](./packages/react-singletn)
+- [@singletn/container-indexeddb](./packages/indexeddb)
+- [@singletn/container-local-storage](./packages/local-storage)

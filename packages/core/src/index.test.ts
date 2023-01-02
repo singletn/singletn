@@ -1,11 +1,4 @@
-import {
-  getSingletone,
-  singletonesMap,
-  deleteSingletone,
-  Singletone,
-  emittersMap,
-  Emitter,
-} from '.'
+import { getSingletone, singletonesMap, deleteSingletone, Singletone } from '.'
 
 describe('@singletn/core tests', () => {
   beforeAll(() => {

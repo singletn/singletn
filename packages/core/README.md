@@ -1,6 +1,6 @@
 # singletn
 
-`@singletn/core` is a simple and reactive way to store your data, in any type of javascript/typescript application.
+`@singletn/core` is a zero dependency, minimal, simple and reactive way to store your data, in any type of javascript/typescript application.
 
 ## How to use it
 
@@ -9,45 +9,45 @@ In order to use `@singletn/core`, you need to create a class that extends `Singl
 ```js
 import { Singletone } from '@singletn/core'
 
-interface User {
+interface UserState {
   name: string
   email: string
   phoneNumber: string
 }
 
-export class UserContainer extends Singletone<User> {
+export class User extends Singletone<UserState> {
   public state = {
     name: '',
     email: '',
     phoneNumber: '',
   }
 
-  public setUser = (user: User) => this.setState(user)
+  public setUser = (user: UserState) => this.setState(user)
 
-  public setName = (name) => this.setState({ name })
+  public setName = (name: string) => this.setState({ name })
 
-  public setEmail = (email) => this.setState({ email })
+  public setEmail = (email: string) => this.setState({ email })
 
   // ...
 }
 ```
 
-Once you have your container, you can now start sharing its state by accessing it's singleton:
+Once you have your singletone, you can now start sharing its state by accessing it's singleton:
 
 ```js
-const usersData = getContainer(UserContainer)
+const userInstance = getSingletone(User)
 ```
 
-The way `getContainer` works is: if there's already an instance of `UserContainer`, it'll return that instance. If not, it'll create a new one, that will then be returned everytime `getContainer` is called.
+The way `getSingletone` works is: if there's already an instance of `User`, it'll return that instance. If not, it'll create a new one, that will then be returned everytime `getSingletone` is called.
 
 ## Act when it matters
 
 In order to detect everytime that the state is changed, you can use the `subscribeListener` function.
 
 ```js
-const usersData = getContainer(UserContainer)
+const userInstance = getSingletone(User)
 
-const unsubscribe = subscribeListener(usersData, () => {
+const unsubscribe = subscribeListener(userInstance, () => {
   // do something with the new state!
 })
 
@@ -57,17 +57,52 @@ unsubscribe()
 
 Note that the `subscribeListener` function returns another function for unsubscribing. Call it whenever the state is no longer relevant, or on unmount.
 
+## Prevent emitting changes
+
+In order to prevent emitting changes, all you need to do is pass a second param to `setState` calls as true. 
+The `setState` function accepts two parameters:
+
+| Parameter | Description |
+| --------- | ----------- |
+| `updater`   | This parameter can either be a function that receives current state as a parameter and returns a new state or a partial/complete new state to be merged to current state. |
+| `silent` | Optional boolean parameter that defaults to `false`. When set to `true`, prevents emitting event to listeners |
+
+## Can my singletone be, well, not a singletone? 🤓
+
+Well, yes! Although we must advise to use this carefully, here's one possible approach to do so:
+
+```js
+const johnInstance = getSingletone(new User())
+const maryInstance = getSingletone(new User())
+
+john.setName("John");
+mary.setName("Mary");
+
+console.log(john.state.name) // John
+console.log(mary.state.name) // Mary
+```
+
+Notice that `getSingletone` accepts both the class itself and an instance of a class. You can see that by following the code bellow:
+
+```js
+const user = getSingletone(new User())
+
+console.log(getSingletone(user) === user) // true
+```
+
+This happens because `getSingletone` detects if the parameter sent is an instance of a class, and, if so, returns that class straight away. Otherwise, it makes a lookup to a map that holds the instances of the singletones, returning the one with the key being the class passed as parameter. 
+
 ## Clear everything
 
 If at any point you need to clear all your data (commonly due to a user sign out, for instance), you can simply call `clearSingletones` function.
-This will remove all the containers stored and managed by `@singletn/core`.
+This will remove all the singletones stored and managed by `@singletn/core`.
 
 ### .destroy()
 
-While clearing the containers, a `destroy` function will be called. This is so that you can cleanup any backgroud task you may have running.
+While clearing the singletones, a `destroy` function will be called. This is so that you can cleanup any backgroud task you may have running.
 
 ```js
-export class UserContainer extends Singletone<User> {
+export class User extends Singletone<UserState> {
   constructor() {
     super()
     this.interval = setInterval(() => {
@@ -83,7 +118,7 @@ export class UserContainer extends Singletone<User> {
 
 ## Other ways to store your state
 
-`singletn` also allows you to use different base `Containers` to store your states in other ways. Read more about it in the subprojects:
+`singletn` also allows you to use different base `Singletone` to store your states in other ways. Read more about it in the subprojects:
 
-- [@singletn/container-local-storage](../singletn-container-local-storage)
-- [@singletn/container-indexeddb](../singletn-container-indexeddb)
+- [@singletn/local-storage](../local-storage)
+- [@singletn/ndexeddb](../indexeddb)

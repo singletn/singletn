@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react-hooks'
-import { clearSingletones, Singletone } from '../../core/src'
-import { useSingletone } from './'
+import { clearSingletones, Singletone, getSingletone } from '@singletn/core/src'
+import { useSingletone, useSingletoneState } from '.'
 import * as React from 'react'
 
 /**
@@ -28,7 +28,7 @@ interface ObjectContainerState {
 }
 
 class ObjectContainer extends Singletone<ObjectContainerState> {
-  public state = {
+  state = {
     name: '',
     age: 0,
     items: [] as string[],
@@ -47,14 +47,6 @@ jest.mock('@singletn/core', () => {
 })
 
 describe('`useSingletone` tests', () => {
-  beforeAll(() => {
-    jest
-      .spyOn(window, 'requestAnimationFrame')
-      .mockImplementation((cb: any) => window.setTimeout(cb as () => void, 0))
-
-    jest.useFakeTimers()
-  })
-
   beforeEach(() => {
     clearSingletones()
   })
@@ -93,8 +85,6 @@ describe('`useSingletone` tests', () => {
     onUpdate.mockReset()
     act(() => container.setName('Nic'))
 
-    jest.runAllTimers()
-
     expect(onUpdate).not.toHaveBeenCalled()
   })
 
@@ -108,8 +98,6 @@ describe('`useSingletone` tests', () => {
     onUpdate.mockReset()
     act(() => container.setName('Nic'))
 
-    jest.runAllTimers()
-
     expect(onUpdate).toHaveBeenCalled()
   })
 
@@ -118,7 +106,7 @@ describe('`useSingletone` tests', () => {
     const onUpdate = jest.fn()
     const { result } = renderHook(() =>
       useSingletone(ObjectContainer, {
-        shouldTriggerUpdate: updater.mockImplementation(() => false),
+        shouldUpdate: updater.mockImplementation(() => false),
         onUpdate,
       }),
     )
@@ -126,8 +114,6 @@ describe('`useSingletone` tests', () => {
 
     onUpdate.mockReset()
     act(() => container.setName('Nic'))
-
-    jest.runAllTimers()
 
     expect(updater).toHaveBeenCalled()
     expect(onUpdate).not.toHaveBeenCalled()
@@ -138,7 +124,7 @@ describe('`useSingletone` tests', () => {
     const onUpdate = jest.fn()
     const { result } = renderHook(() =>
       useSingletone(ObjectContainer, {
-        shouldTriggerUpdate: updater.mockImplementation(() => true),
+        shouldUpdate: updater.mockImplementation(() => true),
         onUpdate,
       }),
     )
@@ -146,8 +132,6 @@ describe('`useSingletone` tests', () => {
 
     onUpdate.mockReset()
     act(() => container.setName('Nic'))
-
-    jest.runAllTimers()
 
     expect(updater).toHaveBeenCalled()
     expect(onUpdate).toHaveBeenCalled()
@@ -161,8 +145,6 @@ describe('`useSingletone` tests', () => {
     onUpdate.mockReset()
     act(() => container.setName('Nic'))
 
-    jest.runAllTimers()
-
     expect(onUpdate).not.toHaveBeenCalled()
   })
 
@@ -174,8 +156,13 @@ describe('`useSingletone` tests', () => {
     onUpdate.mockReset()
     act(() => container.setName('Nic'))
 
-    jest.runAllTimers()
-
     expect(onUpdate).toHaveBeenCalled()
+  })
+
+  it('Should be able to useSigneltoneState', () => {
+    const { result } = renderHook(() => useSingletoneState(ObjectContainer))
+    const state = result.current
+
+    expect(state).toBe(getSingletone(ObjectContainer).state)
   })
 })

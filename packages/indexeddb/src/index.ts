@@ -16,9 +16,9 @@ export class IndexedDBSingletone<State = any> {
 
     this.instance.keys(async (_, keys) => {
       // when there are new values not yet stored, store default value
-      if (keys.length !== Object.keys(this.state).length) {
+      if (keys.length !== Object.keys(this.state || {}).length) {
         this.setItems(
-          Object.keys(this.state)
+          Object.keys(this.state || {})
             .filter(key => !keys.some(k => k === key))
             .reduce(
               (acc, key) => ({
