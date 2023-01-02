@@ -4,7 +4,7 @@
 
 `singletn` is a different way to handle your states. It uses classes and a well known `setState` API (same as [React.Component](https://reactjs.org/docs/react-component.html)).
 
-It's on its own framework agnostic. It allows for code to be shared amongst different apps and requires only a simple implementation to be used by any framework.
+It is, on its own, framework agnostic. It allows for code to be shared amongst different apps and requires only a simple implementation to be used by any framework.
 
 ### Quick links
 

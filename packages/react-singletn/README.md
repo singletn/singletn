@@ -148,21 +148,19 @@ function App() {
 If your component will only use the methods from the singletone instance, in order to avoid re-rendering it every time the state changes, you can follow some of the following approaches:
 
 ```js
-function App() {
-  // simply tell the hook never to update
-  const { increase, decrease } = useSingletone(Counter, { shouldUpdate: () => false });
+// simply tell the hook never to update
+const { increase, decrease } = useSingletone(Counter, { shouldUpdate: () => false });
 
-  // the hook would only trigger a rerender if a key that's being 
-  // watched changes, which will never happen in this case.
-  const { increase, decrease } = useSingletone(Counter, { watchKeys: [] });
+// the hook would only trigger a rerender if a key that's being 
+// watched changes, which will never happen in this case.
+const { increase, decrease } = useSingletone(Counter, { watchKeys: [] });
 
-  // instead of using the hook, you can just get the 
-  // instance from the original singletone instances map.
-  const { increase, decrease } = getSingletone(Counter)
+// instead of using the hook, you can just get the 
+// instance from the original singletone instances map.
+const { increase, decrease } = getSingletone(Counter)
 
-  // in essence, same approach as above, but with memo.
-  const { increase, decrease } = React.useMemo(() => getSingletone(Counter), [])
-}
+// in essence, same approach as above, but with memo.
+const { increase, decrease } = React.useMemo(() => getSingletone(Counter), [])
 ```
 
 ## Other ways to store your state
