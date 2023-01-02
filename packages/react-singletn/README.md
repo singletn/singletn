@@ -1,4 +1,4 @@
-# @singletn/react-singletn
+# @singletn/react-singletn &#8194;[![npm version](https://img.shields.io/npm/v/@singletn/react-singletn.svg?style=flat)](https://www.npmjs.com/package/@singletn/react-singletn)
 
 `react-singletn` is a tiny library to help you manage your global and local states (based on [`@singletn/core`](../core)) without any need for configuration and no dependency on context.
 

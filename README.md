@@ -1,4 +1,4 @@
-# singletn &#8194;[![GitHub license](https://img.shields.io/badge/license-MIT-purple.svg)](https://github.com/facebook/react/blob/main/LICENSE)&#8194;[![npm version](https://img.shields.io/npm/v/@singletn/core.svg?style=flat)](https://www.npmjs.com/package/@singletn/core)
+# singletn &#8194;[![npm version](https://img.shields.io/npm/v/@singletn/core.svg?style=flat)](https://www.npmjs.com/package/@singletn/core)
 
 ## About
 

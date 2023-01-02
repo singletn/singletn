@@ -1,4 +1,4 @@
-# @singletn/container-local-storage
+# @singletn/container-local-storage  &#8194;[![npm version](https://img.shields.io/npm/v/@singletn/local-storage.svg?style=flat)](https://www.npmjs.com/package/@singletn/local-storage)
 
 ## Persist your data
 

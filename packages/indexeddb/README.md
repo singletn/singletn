@@ -1,4 +1,4 @@
-# @singletn/container-indexeddb
+# @singletn/container-indexeddb  &#8194;[![npm version](https://img.shields.io/npm/v/@singletn/indexeddb.svg?style=flat)](https://www.npmjs.com/package/@singletn/indexeddb)
 
 ## Persist your data
 

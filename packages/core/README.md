@@ -1,4 +1,4 @@
-# singletn
+# singletn  &#8194;[![npm version](https://img.shields.io/npm/v/@singletn/core.svg?style=flat)](https://www.npmjs.com/package/@singletn/core)
 
 `@singletn/core` is a zero dependency, minimal, simple and reactive way to store your data, in any type of javascript/typescript application.
 
