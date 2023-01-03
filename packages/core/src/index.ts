@@ -106,6 +106,11 @@ export const getSingletone = <C extends SingletoneType>(singletone: C | Class<C>
 
 export class Singletone<State = any> {
   public state!: State
+  protected className: string = ''
+
+  constructor() {
+    this.className = this.constructor.name
+  }
 
   public setState = (
     updater: Partial<State> | ((prevState: State) => Partial<State> | null),
@@ -113,7 +118,7 @@ export class Singletone<State = any> {
   ) => {
     const nextState = updater instanceof Function ? updater(this.state) : updater
     if (nextState) {
-      const prevState = this.state
+      const prevState = { ...this.state }
       this.state =
         nextState instanceof Object ? Object.assign({}, this.state, nextState) : nextState
 
@@ -121,15 +126,42 @@ export class Singletone<State = any> {
         getEmitter(this).emit({ nextState: this.state, prevState })
       }
 
-      // console.log(
-      //   new Error()?.stack
-      //     ?.toString()
-      //     .split('at ')[2]
-      //     // .match(/at \w+\.\w+/)?.[1]
-      //     .split('.')[1],
-      // )
+      if (isDevtools && getTraces) {
+        const trace = getTraces()[2]
+
+        devtoolsEmitter.emit({
+          methodName: trace.function,
+          singletoneName: this.className,
+          prevState,
+          nextState: this.state,
+          id: `${Math.random() * Math.random()}`.replace('0.', ''),
+        } as any)
+      }
     }
   }
 
   public destroy = () => {}
+}
+
+/**
+ * ------------------------------------
+ * - From this line onwards, all you  -
+ * - can see is devtools junk         -
+ * ------------------------------------
+ */
+let devtoolsEmitter: Emitter
+const isDevtools = process.env.NODE_ENV === 'development' && window
+let getTraces: (() => any[]) | null = null
+
+if (isDevtools) {
+  devtoolsEmitter = new Emitter()
+
+  import('./tracers').then(imported => {
+    getTraces = imported.default
+  })
+
+  // @ts-ignore
+  window.$singletn = {
+    emitter: devtoolsEmitter,
+  }
 }

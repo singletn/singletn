@@ -1,0 +1,20 @@
+{
+  "name": "Singletn DevTools",
+  "description": "Dev tools to visualize changes to states in Singletn",
+  "devtools_page": "index.html",
+  "version": "1.0",
+  "manifest_version": 2,
+  "icons": {
+    "16": "logo192.webp",
+    "48": "logo192.webp",
+    "128": "logo192.webp"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["inject.js"],
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": ["content.js"]
+}
