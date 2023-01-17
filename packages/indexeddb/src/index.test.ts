@@ -1,4 +1,4 @@
-import { IndexedDBSingletone } from '.'
+import { IndexedDBSingletn } from '.'
 import 'fake-indexeddb/auto'
 import { createInstance } from 'localforage'
 
@@ -14,7 +14,7 @@ const defaultState = {
   items: [] as string[],
 }
 
-class ObjectContainerIndexedDb extends IndexedDBSingletone<ObjectContainerState> {
+class ObjectContainerIndexedDb extends IndexedDBSingletn<ObjectContainerState> {
   state = defaultState
 
   public setName = (name: string) => this.setState({ name })
@@ -26,7 +26,7 @@ class ObjectContainerIndexedDb extends IndexedDBSingletone<ObjectContainerState>
 
 const flushPromises = () => new Promise(setImmediate)
 
-describe('Test `IndexedDBSingletone` class', () => {
+describe('Test `IndexedDBSingletn` class', () => {
   it('Should create container with default state', () => {
     const container = new ObjectContainerIndexedDb()
 

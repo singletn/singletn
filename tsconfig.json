@@ -13,7 +13,8 @@
     "noImplicitThis": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
-    "incremental": true
+    "incremental": true,
+    "jsx": "react"
   },
   "include": ["./src/**/*"],
   "exclude": ["./node_modules", "../../node_modules", "dist", "**/*.test.ts"]

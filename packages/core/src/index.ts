@@ -21,75 +21,74 @@ export class Emitter {
     (this.listeners = this.listeners.filter(({ id }) => id !== listenerId))
 }
 
-export interface SingletoneType<T = any> {
+export interface SingletnType<T = any> {
   setState: (updater: Partial<T> | ((prevState: T) => Partial<T> | null), silent?: boolean) => void
   state: T
   destroy: () => void
   __destroyInternalCleanup?: () => void
 }
 
-export const isInstanceOfSingletone = <C extends SingletoneType>(
-  singletone: C | Class<C>,
-): boolean =>
-  (singletone as SingletoneType).setState !== undefined &&
-  (singletone as SingletoneType).state !== undefined
+export const isIntanceOfSingletnState = <C extends SingletnType>(singletn: C | Class<C>): boolean =>
+  (singletn as SingletnType).setState !== undefined &&
+  (singletn as SingletnType).state !== undefined
 
-export const emittersMap = new Map<SingletoneType<any>, Emitter>()
+const emittersMap = new Map<SingletnType<any>, Emitter>()
 
-export const getEmitter = (singletone: SingletoneType<any>): Emitter => {
-  if (!emittersMap.has(singletone)) {
+export const getEmitter = (singletn: SingletnType<any>): Emitter => {
+  if (!emittersMap.has(singletn)) {
     const emitter = new Emitter()
-    emittersMap.set(singletone, emitter)
+    emittersMap.set(singletn, emitter)
     return emitter
   }
 
-  return emittersMap.get(singletone)!
+  return emittersMap.get(singletn)!
 }
 
-export const singletonesMap = new Map<Class<SingletoneType<any>>, SingletoneType<any>>()
+/** @private */
+export const singletnsMap = new Map<Class<SingletnType<any>>, SingletnType<any>>()
 
-export const findSingletone = <C>(c: Class<SingletoneType<any>>): SingletoneType<C> => {
-  if (!singletonesMap.has(c)) singletonesMap.set(c, new c())
+export const findSingletn = <C>(c: Class<SingletnType<any>>): SingletnType<C> => {
+  if (!singletnsMap.has(c)) singletnsMap.set(c, new c())
 
-  return singletonesMap.get(c)!
+  return singletnsMap.get(c)!
 }
 
-export const clearSingletones = () => {
-  Array.from(singletonesMap.keys()).forEach(key => {
-    const singletone = getSingletone(key)
-    singletone.destroy()
-    singletone.__destroyInternalCleanup?.()
+export const clearSingletns = () => {
+  Array.from(singletnsMap.keys()).forEach(key => {
+    const singletn = getSingletn(key)
+    singletn.destroy()
+    singletn.__destroyInternalCleanup?.()
   })
 
-  singletonesMap.clear()
+  singletnsMap.clear()
   emittersMap.clear()
 }
 
 export const subscribeListener = <T>(
-  singletone: SingletoneType<T>,
+  singletn: SingletnType<T>,
   listener: (_: { nextState: T; prevState: T }) => void,
   deleteOnUnsubscribe?: boolean,
 ) => {
-  const emitter = getEmitter(singletone)
+  const emitter = getEmitter(singletn)
   const sub = emitter.subscribe(listener)
 
   return () => {
     sub.unsubscribe()
 
     if (deleteOnUnsubscribe) {
-      deleteSingletone(singletone)
+      deleteSingletn(singletn)
     }
   }
 }
 
-export const deleteSingletone = <C extends SingletoneType>(singletone: C | Class<C>) => {
-  const c = getSingletone(singletone)
+export const deleteSingletn = <C extends SingletnType>(singletn: C | Class<C>) => {
+  const c = getSingletn(singletn)
 
-  Array.from(singletonesMap.keys()).forEach(key => {
-    const cnt = getSingletone(key)
+  Array.from(singletnsMap.keys()).forEach(key => {
+    const cnt = getSingletn(key)
 
     if (cnt === c) {
-      singletonesMap.delete(key)
+      singletnsMap.delete(key)
     }
   })
 
@@ -99,12 +98,10 @@ export const deleteSingletone = <C extends SingletoneType>(singletone: C | Class
   c.__destroyInternalCleanup?.()
 }
 
-export const getSingletone = <C extends SingletoneType>(singletone: C | Class<C>): C =>
-  isInstanceOfSingletone(singletone)
-    ? (singletone as C)
-    : (findSingletone(singletone as Class<C>) as C)
+export const getSingletn = <C extends SingletnType>(singletn: C | Class<C>): C =>
+  isIntanceOfSingletnState(singletn) ? (singletn as C) : (findSingletn(singletn as Class<C>) as C)
 
-export class Singletone<State = any> {
+export class SingletnState<State = any> {
   public state!: State
   protected className: string = ''
 
@@ -131,7 +128,7 @@ export class Singletone<State = any> {
 
         devtoolsEmitter.emit({
           methodName: trace.function,
-          singletoneName: this.className,
+          singletnName: this.className,
           prevState,
           nextState: this.state,
           id: `${Math.random() * Math.random()}`.replace('0.', ''),
@@ -144,10 +141,10 @@ export class Singletone<State = any> {
 }
 
 /**
- * ------------------------------------
- * - From this line onwards, all you  -
- * - can see is devtools junk         -
- * ------------------------------------
+ * ┌─────────────────────────────────┐
+ * │ From this line onwards, all you │
+ * │ can see is devtools junk        │
+ * └─────────────────────────────────┘
  */
 let devtoolsEmitter: Emitter
 const isDevtools = process.env.NODE_ENV === 'development' && window

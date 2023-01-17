@@ -7,7 +7,7 @@ type Emission = {
   id: string
   prevState: unknown
   nextState: unknown
-  singletoneName: string
+  singletnName: string
   methodName: string
 }
 
@@ -49,7 +49,7 @@ function App() {
               tabIndex={0}
             >
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                {e.singletoneName} <Chevron style={{ fill: 'white', width: 20, height: 20 }} />{' '}
+                {e.singletnName} <Chevron style={{ fill: 'white', width: 20, height: 20 }} />{' '}
                 {e.methodName}
               </div>
               <div
@@ -61,7 +61,7 @@ function App() {
             {inspecting?.id === e.id && (
               <li
                 className={app.emission}
-                style={{ height: 'auto', paddingBottom: 4, borderTop: 'none' }}
+                style={{ height: 'auto', paddingBottom: 16, borderTop: 'none' }}
               >
                 <ReactDiffViewer
                   oldValue={JSON.stringify(inspecting?.prevState, null, 2)}

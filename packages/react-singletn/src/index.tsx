@@ -1,9 +1,9 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import {
   subscribeListener,
-  findSingletone,
-  SingletoneType,
-  isInstanceOfSingletone,
+  findSingletn,
+  SingletnType,
+  isIntanceOfSingletnState,
 } from '@singletn/core'
 
 type Class<T> = new (...args: any[]) => T
@@ -14,7 +14,7 @@ interface BaseConfig<T> {
 }
 
 interface ConfigWithUpdater<T> extends BaseConfig<T> {
-  shouldUpdate?: (nextState: SingletoneType['state'], prevState: SingletoneType['state']) => boolean
+  shouldUpdate?: (nextState: SingletnType['state'], prevState: SingletnType['state']) => boolean
 }
 
 interface ConfigWithKeysToObserve<T> extends BaseConfig<T> {
@@ -23,21 +23,21 @@ interface ConfigWithKeysToObserve<T> extends BaseConfig<T> {
 
 type Config<T> = ConfigWithKeysToObserve<T> | ConfigWithUpdater<T>
 
-export function useSingletone<T, C extends SingletoneType<T>>(
-  singletone: C | Class<C>,
+export function useSingletn<T, C extends SingletnType<T>>(
+  singletn: C | Class<C>,
   config?: Config<T>,
 ): C {
   const [, forceUpdate] = useState(false)
   const instance = useMemo(
     () =>
-      isInstanceOfSingletone(singletone)
-        ? (singletone as C)
-        : (findSingletone(singletone as Class<C>) as C),
+      isIntanceOfSingletnState(singletn)
+        ? (singletn as C)
+        : (findSingletn(singletn as Class<C>) as C),
     [],
   )
 
-  if (!isInstanceOfSingletone(instance)) {
-    throw new Error('Singletone used does not meet the required implementation')
+  if (!isIntanceOfSingletnState(instance)) {
+    throw new Error('SingletnState used does not meet the required implementation')
   }
 
   const update = useCallback(
@@ -52,7 +52,7 @@ export function useSingletone<T, C extends SingletoneType<T>>(
     const unsubscribe = subscribeListener(
       instance,
       ({ nextState, prevState }) => {
-        if (isInstanceOfSingletone((nextState as never) || {}) || !nextState) {
+        if (isIntanceOfSingletnState((nextState as never) || {}) || !nextState) {
           forceUpdate(c => !c)
           return
         }
@@ -93,31 +93,31 @@ export function useSingletone<T, C extends SingletoneType<T>>(
   return instance
 }
 
-export function useSingletoneState<T, C extends SingletoneType<T>>(
-  singletone: C | Class<C>,
+export function useSingletnState<T, C extends SingletnType<T>>(
+  singletn: C | Class<C>,
   config?: Config<T>,
 ): C['state'] {
-  const { state } = useSingletone(singletone, config)
+  const { state } = useSingletn(singletn, config)
 
   return state
 }
 
-interface SingletnProps<T, S extends SingletoneType<T>> {
-  children: (singletone: S) => React.ReactElement | null
+interface SingletnProps<T, S extends SingletnType<T>> {
+  children: (singletn: S) => React.ReactElement | null
   watch: keyof S['state'] | (keyof S['state'])[]
-  singletone: S | Class<S>
+  singletn: S | Class<S>
   deleteOnUnmount?: boolean
   onUpdate?: (nextState: T) => void
 }
 
-export function Singletn<T, S extends SingletoneType<T>>({
+export function Singletn<T, S extends SingletnType<T>>({
   children,
   watch,
-  singletone,
+  singletn,
   deleteOnUnmount,
   onUpdate,
 }: SingletnProps<T, S>) {
-  const s = useSingletone(singletone, {
+  const s = useSingletn(singletn, {
     watchKeys: Array.isArray(watch) ? watch : [watch],
     deleteOnUnmount,
     onUpdate,

@@ -1,21 +1,21 @@
 import { getEmitter } from '@singletn/core'
 
-export class LocalStorageSingletone<State = any> {
+export class LocalStorageSingletn<State = any> {
   public state!: State
-  private singletoneKey: string = ''
+  private singletnKey: string = ''
 
-  constructor(singletoneKey: string, state: State) {
+  constructor(singletnKey: string, state: State) {
     if (!localStorage) {
       this.state = state
       return
     }
 
-    this.singletoneKey = singletoneKey
+    this.singletnKey = singletnKey
 
     const keys = Object.keys(localStorage).filter(key => {
       const keyVal = localStorage.getItem(key)
 
-      return key.startsWith(`${this.singletoneKey}-`) && ![null, 'undefined', ''].includes(keyVal)
+      return key.startsWith(`${this.singletnKey}-`) && ![null, 'undefined', ''].includes(keyVal)
     })
 
     const storedState = keys.reduce(
@@ -46,7 +46,7 @@ export class LocalStorageSingletone<State = any> {
 
       Object.keys(nextState).forEach(key => {
         localStorage.setItem(
-          `${this.singletoneKey}-${key}`,
+          `${this.singletnKey}-${key}`,
           JSON.stringify(nextState[key as keyof State] || null),
         )
       })
@@ -57,7 +57,7 @@ export class LocalStorageSingletone<State = any> {
 
   public destroy = () => {
     Object.keys(this.state || {}).forEach(key => {
-      localStorage.removeItem(`${this.singletoneKey}-${key}`)
+      localStorage.removeItem(`${this.singletnKey}-${key}`)
     })
   }
 }

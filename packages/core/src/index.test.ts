@@ -1,4 +1,4 @@
-import { getSingletone, singletonesMap, deleteSingletone, Singletone } from '.'
+import { getSingletn, singletnsMap, deleteSingletn, SingletnState } from '.'
 
 describe('@singletn/core tests', () => {
   beforeAll(() => {
@@ -10,43 +10,43 @@ describe('@singletn/core tests', () => {
   })
 
   beforeEach(() => {
-    singletonesMap.clear()
+    singletnsMap.clear()
   })
 
-  it('should create singletone on map when getting singletone', () => {
-    class Test extends Singletone {
+  it('should create singletn on map when getting singletn', () => {
+    class Test extends SingletnState {
       state = {
         test: '',
       }
     }
 
-    expect(Array.from(singletonesMap.keys()).length).toBe(0)
+    expect(Array.from(singletnsMap.keys()).length).toBe(0)
 
-    getSingletone(Test)
+    getSingletn(Test)
 
-    expect(Array.from(singletonesMap.keys()).length).toBe(1)
+    expect(Array.from(singletnsMap.keys()).length).toBe(1)
   })
 
-  it('should remove singletone from singletonesMap when deleting', () => {
-    class Test extends Singletone {
+  it('should remove singletn from singletnsMap when deleting', () => {
+    class Test extends SingletnState {
       state = {
         test: '',
       }
     }
 
-    class Test2 extends Singletone {
+    class Test2 extends SingletnState {
       state = {
         test: '',
       }
     }
 
-    const cont = getSingletone(Test)
-    getSingletone(Test2)
+    const cont = getSingletn(Test)
+    getSingletn(Test2)
 
-    expect(singletonesMap.get(Test)).not.toBeUndefined()
+    expect(singletnsMap.get(Test)).not.toBeUndefined()
 
-    deleteSingletone(cont)
+    deleteSingletn(cont)
 
-    expect(singletonesMap.get(Test)).toBeUndefined()
+    expect(singletnsMap.get(Test)).toBeUndefined()
   })
 })

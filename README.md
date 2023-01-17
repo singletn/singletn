@@ -14,5 +14,5 @@ If you're looking to use `singletn` with [react](https://reactjs.org/), refer to
 
 - [@singletn/core](./packages/core)
 - [@singletn/react-singletn](./packages/react-singletn)
-- [@singletn/container-indexeddb](./packages/indexeddb)
-- [@singletn/container-local-storage](./packages/local-storage)
+- [@singletn/indexeddb](./packages/indexeddb)
+- [@singletn/local-storage](./packages/local-storage)

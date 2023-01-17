@@ -1,4 +1,4 @@
-import { LocalStorageSingletone } from '.'
+import { LocalStorageSingletn } from '.'
 
 interface ObjectContainerState {
   name: string
@@ -12,7 +12,7 @@ const defaultState = {
   items: [] as string[],
 }
 
-class ObjectContainerLocalStorage extends LocalStorageSingletone<ObjectContainerState> {
+class ObjectContainerLocalStorage extends LocalStorageSingletn<ObjectContainerState> {
   constructor() {
     super('ObjectContainerLocalStorage', defaultState)
   }
@@ -24,7 +24,7 @@ class ObjectContainerLocalStorage extends LocalStorageSingletone<ObjectContainer
   public addItem = (item: string) => this.setState(s => ({ items: [...s.items, item] }))
 }
 
-describe('Test `LocalStorageSingletone` class', () => {
+describe('Test `LocalStorageSingletn` class', () => {
   it('Should create container with default state', () => {
     const container = new ObjectContainerLocalStorage()
 

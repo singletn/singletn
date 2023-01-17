@@ -4,10 +4,10 @@
 
 ## How to use it
 
-In order to use `react-singletn`, you need to create a class that extends `Singletone`, provided on the package.
+In order to use `react-singletn`, you need to create a class that extends `SingletnState`, provided on the package.
 
 ```js
-import { Singletone } from '@singletn/react-singletn'
+import { SingletnState } from '@singletn/react-singletn'
 
 interface UserState {
   name: string
@@ -15,7 +15,7 @@ interface UserState {
   phoneNumber: string
 }
 
-export class User extends Singletone<UserState> {
+export class User extends SingletnState<UserState> {
   public state = {
     name: '',
     email: '',
@@ -32,15 +32,15 @@ export class User extends Singletone<UserState> {
 }
 ```
 
-Once you have your singletone, you can now start sharing its state:
+Once you have your singletn, you can now start sharing its state:
 
 ```js
 import * as React from 'react'
-import { useSingletone } from '@singletn/react-singletn'
+import { useSingletn } from '@singletn/react-singletn'
 import { User } from './User'
 
 export const App = () => {
-  const user = useSingletone(User)
+  const user = useSingletn(User)
 
   React.useEffect(() => {
     fetch('/user')
@@ -54,12 +54,12 @@ export const App = () => {
 
 ## Share globally and locally
 
-If your intention is to share the state globally, you can then use simply the reference to the class inside the `useSingletone` call. However, you can create local states by creating instances of those classes.
+If your intention is to share the state globally, you can then use simply the reference to the class inside the `useSingletn` call. However, you can create local states by creating instances of those classes.
 
 ```js
 export const App = () => {
   // uses the global state for User
-  const user = useSingletone(User)
+  const user = useSingletn(User)
 
   return (
     // ...
@@ -69,7 +69,7 @@ export const App = () => {
 export const App = () => {
   // creates a local state for User
   const localUser = React.useRef(new User())
-  const user = useSingletone(localUser.current)
+  const user = useSingletn(localUser.current)
 
   return (
     // ...
@@ -78,13 +78,13 @@ export const App = () => {
 
 ```
 
-In order to configure the behaviour of your local singletone instance, you can make use of a configuration object as a second parameter.
+In order to configure the behaviour of your local singletn instance, you can make use of a configuration object as a second parameter.
 
 ```js
 export const App = () => {
-  const user = useSingletone(User, {
-    // whether or not you want the singletone to be deleted when component unmounts.
-    // Use `true` when the singletone used is for a local state.
+  const user = useSingletn(User, {
+    // whether or not you want the singletn to be deleted when component unmounts.
+    // Use `true` when the singletn used is for a local state.
     deleteOnUnmount: false,
     // receive a callback with the new state when there's a change
     onUpdate: (nextState) => {},
@@ -108,13 +108,13 @@ Note that the options object only acept one option between `shouldUpdate` and `w
 This package also exports a `Singletn` component. This allows you to avoid re-rendering your whole component when your state changes.
 
 ```js
-import { Singletone, Singletn, getSingletone } from '@singletn/react-singletn'
+import { SingletnState, Singletn, getSingletn } from '@singletn/react-singletn'
 
 interface State {
   count: number
 }
 
-class Counter extends Singletone<State> {
+class Counter extends SingletnState<State> {
   state = {
     count: 0,
   } as State
@@ -128,12 +128,12 @@ function App() {
     <div>
       <h1>Singletn Playground</h1>
       <div>
-        <Singletn singletone={Counter} watch="count">
+        <Singletn singletn={Counter} watch="count">
           {({ state }) => <h2>Count is {state.count}</h2>}
         </Singletn>
 
-        <button onClick={getSingletone(Counter).decrease}>-</button>
-        <button onClick={getSingletone(Counter).increase}>+</button>
+        <button onClick={getSingletn(Counter).decrease}>-</button>
+        <button onClick={getSingletn(Counter).increase}>+</button>
       </div>
     </div>
   )
@@ -145,27 +145,27 @@ function App() {
 
 ## Prevent rerenders
 
-If your component will only use the methods from the singletone instance, in order to avoid re-rendering it every time the state changes, you can follow some of the following approaches:
+If your component will only use the methods from the singletn instance, in order to avoid re-rendering it every time the state changes, you can follow some of the following approaches:
 
 ```js
 // simply tell the hook never to update
-const { increase, decrease } = useSingletone(Counter, { shouldUpdate: () => false });
+const { increase, decrease } = useSingletn(Counter, { shouldUpdate: () => false });
 
 // the hook would only trigger a rerender if a key that's being 
 // watched changes, which will never happen in this case.
-const { increase, decrease } = useSingletone(Counter, { watchKeys: [] });
+const { increase, decrease } = useSingletn(Counter, { watchKeys: [] });
 
 // instead of using the hook, you can just get the 
-// instance from the original singletone instances map.
-const { increase, decrease } = getSingletone(Counter)
+// instance from the original singletn instances map.
+const { increase, decrease } = getSingletn(Counter)
 
 // in essence, same approach as above, but with memo.
-const { increase, decrease } = React.useMemo(() => getSingletone(Counter), [])
+const { increase, decrease } = React.useMemo(() => getSingletn(Counter), [])
 ```
 
 ## Other ways to store your state
 
-`singletn` also allows you to use different base `Singletone` to store your states in other ways. Read more about it in the subprojects:
+`singletn` also allows you to use different base `SingletnState` to store your states in other ways. Read more about it in the subprojects:
 
 - [@singletn/local-storage](../local-storage)
 - [@singletn/indexeddb](../indexeddb)

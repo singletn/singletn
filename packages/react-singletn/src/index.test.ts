@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react-hooks'
-import { clearSingletones, Singletone, getSingletone } from '@singletn/core/src'
-import { useSingletone, useSingletoneState } from '.'
+import { clearSingletns, SingletnState, getSingletn } from '@singletn/core/src'
+import { useSingletn, useSingletnState } from '.'
 import * as React from 'react'
 
 /**
@@ -10,7 +10,7 @@ interface State {
   num: number
 }
 
-class Num extends Singletone<State> {
+class Num extends SingletnState<State> {
   state = {
     num: 0,
   }
@@ -27,7 +27,7 @@ interface ObjectContainerState {
   items: Array<string>
 }
 
-class ObjectContainer extends Singletone<ObjectContainerState> {
+class ObjectContainer extends SingletnState<ObjectContainerState> {
   state = {
     name: '',
     age: 0,
@@ -46,13 +46,13 @@ jest.mock('@singletn/core', () => {
   return singletn
 })
 
-describe('`useSingletone` tests', () => {
+describe('`useSingletn` tests', () => {
   beforeEach(() => {
-    clearSingletones()
+    clearSingletns()
   })
 
   it('Sets num', () => {
-    const { result } = renderHook(() => useSingletone(Num))
+    const { result } = renderHook(() => useSingletn(Num))
     const container = result.current
 
     expect(container.state.num).toBe(0)
@@ -62,7 +62,7 @@ describe('`useSingletone` tests', () => {
   })
 
   it('Updates state with complex object', () => {
-    const { result } = renderHook(() => useSingletone(ObjectContainer))
+    const { result } = renderHook(() => useSingletn(ObjectContainer))
     const container = result.current
 
     act(() => container.setAge(12))
@@ -78,7 +78,7 @@ describe('`useSingletone` tests', () => {
   it('Should not rerender when changed prop is not observed', () => {
     const onUpdate = jest.fn()
     const { result } = renderHook(() =>
-      useSingletone(ObjectContainer, { watchKeys: ['age'], onUpdate }),
+      useSingletn(ObjectContainer, { watchKeys: ['age'], onUpdate }),
     )
     const container = result.current
 
@@ -91,7 +91,7 @@ describe('`useSingletone` tests', () => {
   it('Should rerender when changed prop is observed', () => {
     const onUpdate = jest.fn()
     const { result } = renderHook(() =>
-      useSingletone(ObjectContainer, { watchKeys: ['name'], onUpdate }),
+      useSingletn(ObjectContainer, { watchKeys: ['name'], onUpdate }),
     )
     const container = result.current
 
@@ -105,7 +105,7 @@ describe('`useSingletone` tests', () => {
     const updater = jest.fn()
     const onUpdate = jest.fn()
     const { result } = renderHook(() =>
-      useSingletone(ObjectContainer, {
+      useSingletn(ObjectContainer, {
         shouldUpdate: updater.mockImplementation(() => false),
         onUpdate,
       }),
@@ -123,7 +123,7 @@ describe('`useSingletone` tests', () => {
     const updater = jest.fn()
     const onUpdate = jest.fn()
     const { result } = renderHook(() =>
-      useSingletone(ObjectContainer, {
+      useSingletn(ObjectContainer, {
         shouldUpdate: updater.mockImplementation(() => true),
         onUpdate,
       }),
@@ -139,7 +139,7 @@ describe('`useSingletone` tests', () => {
 
   it('Should not rerender when dependencies array is empty', () => {
     const onUpdate = jest.fn()
-    const { result } = renderHook(() => useSingletone(ObjectContainer, { onUpdate, watchKeys: [] }))
+    const { result } = renderHook(() => useSingletn(ObjectContainer, { onUpdate, watchKeys: [] }))
     const container = result.current
 
     onUpdate.mockReset()
@@ -150,7 +150,7 @@ describe('`useSingletone` tests', () => {
 
   it('Should rerender when no dependencies are set', () => {
     const onUpdate = jest.fn()
-    const { result } = renderHook(() => useSingletone(ObjectContainer, { onUpdate }))
+    const { result } = renderHook(() => useSingletn(ObjectContainer, { onUpdate }))
     const container = result.current
 
     onUpdate.mockReset()
@@ -160,9 +160,9 @@ describe('`useSingletone` tests', () => {
   })
 
   it('Should be able to useSigneltoneState', () => {
-    const { result } = renderHook(() => useSingletoneState(ObjectContainer))
+    const { result } = renderHook(() => useSingletnState(ObjectContainer))
     const state = result.current
 
-    expect(state).toBe(getSingletone(ObjectContainer).state)
+    expect(state).toBe(getSingletn(ObjectContainer).state)
   })
 })

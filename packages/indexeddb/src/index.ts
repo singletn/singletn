@@ -1,7 +1,7 @@
 import { getEmitter } from '@singletn/core'
 import { createInstance, dropInstance, INDEXEDDB, WEBSQL, LOCALSTORAGE } from 'localforage'
 
-export class IndexedDBSingletone<State = any> {
+export class IndexedDBSingletn<State = any> {
   public state!: State
 
   private instance: LocalForage
@@ -30,7 +30,7 @@ export class IndexedDBSingletone<State = any> {
         )
       }
 
-      // when first time singletone is created, no need to load state
+      // when first time singletn is created, no need to load state
       if (keys.length === 0) {
         return
       }
