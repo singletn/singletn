@@ -2,7 +2,83 @@
 
 `react-singletn` is a tiny library to help you manage your global and local states (based on [`@singletn/core`](../core)) without any need for configuration and no dependency on context.
 
-## How to use it
+## Installing
+
+```sh
+yarn add @singletn/react-singletn
+```
+
+or
+
+```sh
+npm i @singletn/react-singletn
+```
+
+## Basic usage
+
+To quickly demonstrate how to start using `singletn` with your react app, we'll simply show how to convert a basic counter managed via `React.useState` hook into a `Singletn` state that can use hooks or our components.
+
+### The React.useState way
+
+Let's say we have a simple component:
+
+```js
+import { useState } from 'react'
+
+function App() {
+  const [count, setCount] = useState(0)
+
+  return (
+    <div>
+      <button onClick={() => setCount(count => count + 1)}>count is {count}</button>
+    </div>
+  )
+}
+```
+
+So, to convert this to a `singletn` state, first step is to create a class that extends `SingletnState`:
+
+```js
+import { SingletnState } from '@singletn/react-singletn'
+
+// SingletnState takes a generic type to type the state
+class CounterState extends SingletnState<{ counter: number }> {
+  // initialize the state
+  state = {
+    counter: 0,
+  }
+
+  // expose a method that changes the state.
+  increase = () => this.setState(s => ({ counter: s.counter + 1 }))
+}
+```
+
+Ok! This should be enough for us to start working with our new `Sigletn` state. Let's see how to do that:
+
+First, we should import the hook we'll use
+
+```js
+import { useSingletn } from '@singletn/react-singletn'
+```
+
+After that, we can replace the React.setState hook with `useSingletn` hook.
+```diff
+- const [count, setCount] = useState(0)
++ const { state, increase } = useSingletn(CounterState)
+```
+
+Now, we can make the adjustment to the button:
+
+```diff
+- <button onClick={() => setCount(count => count + 1)}>count is {count}</button>
++ <button onClick={increase}>count is {state.count}</button>
+```
+
+That's all you need to do to convert your local state to use `Singletn` state. 🎉
+
+Next, let's see some other usages
+
+### Starting anew
 
 In order to use `react-singletn`, you need to create a class that extends `SingletnState`, provided on the package.
 
@@ -105,6 +181,7 @@ export const App = () => {
 Note that the options object only acept one option between `shouldUpdate` and `watchKeys`.
 
 ## `Singletn` component
+
 This package also exports a `Singletn` component. This allows you to avoid re-rendering your whole component when your state changes.
 
 ```js
@@ -124,16 +201,19 @@ class Counter extends SingletnState<State> {
 }
 
 function App() {
+  const { increase, decrease } = React.useMemo(() => getContainer(Counter), [])
+
   return (
     <div>
       <h1>Singletn Playground</h1>
       <div>
         <Singletn singletn={Counter} watch="count">
-          {({ state }) => <h2>Count is {state.count}</h2>}
+          {({ state }) => (
+            <h2>Count is {state.count}</h2>
+          )}
         </Singletn>
-
-        <button onClick={getSingletn(Counter).decrease}>-</button>
-        <button onClick={getSingletn(Counter).increase}>+</button>
+        <button onClick={decrease}>-</button>
+        <button onClick={increase}>+</button>
       </div>
     </div>
   )
@@ -161,6 +241,9 @@ const { increase, decrease } = getSingletn(Counter)
 
 // in essence, same approach as above, but with memo.
 const { increase, decrease } = React.useMemo(() => getSingletn(Counter), [])
+
+// if using the Singletn component, we can pass an empty array as `watch` prop
+<Singletn singletn={Counter} watch={[]}></Singletn>
 ```
 
 ## Other ways to store your state
