@@ -13,10 +13,18 @@ function injectScript(file_path, tag) {
   node.appendChild(script)
 }
 
-window.addEventListener('message', event => {
-  if (event.data.from === 'content.js') {
-    chrome.runtime.sendMessage(event.data.message)
+window.addEventListener('load', () => {
+  window.addEventListener('message', event => {
+    if (event.data.from === 'content.js') {
+      chrome.runtime.sendMessage(event.data.message)
+    }
+  })
+
+  const listener = message => {
+    window.postMessage({ from: 'inject.js', message })
   }
+
+  chrome.runtime.onMessage.addListener(listener)
 })
 
 injectScript(chrome.extension.getURL('content.js'), 'body')

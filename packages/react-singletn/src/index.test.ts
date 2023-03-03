@@ -1,7 +1,6 @@
 import { renderHook, act } from '@testing-library/react-hooks'
-import { clearSingletns, SingletnState, getSingletn } from '@singletn/core/src'
-import { useSingletn, useSingletnState } from '.'
-import * as React from 'react'
+import { singletnsMap, SingletnState, getSingletn } from '@singletn/core/src'
+import { useLocalSingletn, useSingletn, useSingletnState } from '.'
 
 /**
  *  Tests for simple container
@@ -48,7 +47,13 @@ jest.mock('@singletn/core', () => {
 
 describe('`useSingletn` tests', () => {
   beforeEach(() => {
-    clearSingletns()
+    singletnsMap.clear()
+  })
+
+  it("Throws if given parameter isn't a SingletnState", () => {
+    expect(() => {
+      renderHook(() => useSingletn(Date as any))
+    }).toThrowError('SingletnState used does not meet the required implementation')
   })
 
   it('Sets num', () => {
@@ -164,5 +169,27 @@ describe('`useSingletn` tests', () => {
     const state = result.current
 
     expect(state).toBe(getSingletn(ObjectContainer).state)
+  })
+
+  it('Should be able to useSigneltoneState', () => {
+    const { result } = renderHook(() => useSingletnState(ObjectContainer))
+    const state = result.current
+
+    expect(state).toBe(getSingletn(ObjectContainer).state)
+  })
+
+  it('Should create a new instance when using useLocalSingletn', () => {
+    const { result: globalResult } = renderHook(() => useSingletn(ObjectContainer))
+    const { result: localResult } = renderHook(() => useLocalSingletn(ObjectContainer))
+
+    // even though the values of the states are the same, the object differs
+    expect(localResult.current.state).toEqual(globalResult.current.state)
+    expect(localResult.current.state).not.toBe(globalResult.current.state)
+
+    const { result: localResult2 } = renderHook(() => useLocalSingletn(ObjectContainer))
+
+    // even though the values of the states are the same, the object differs for each local instance
+    expect(localResult.current.state).toEqual(localResult2.current.state)
+    expect(localResult.current.state).not.toBe(localResult2.current.state)
   })
 })

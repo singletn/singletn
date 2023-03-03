@@ -3,7 +3,7 @@ type Class<T> = new (...args: any[]) => T
 type Listener = (obj: { nextState: any; prevState: any }) => void
 
 export class Emitter {
-  public listeners: {
+  private listeners: {
     id: Symbol
     listener: Listener
   }[] = []
@@ -17,7 +17,7 @@ export class Emitter {
 
   emit: Listener = data => this.listeners.forEach(({ listener }) => listener(data))
 
-  unsubscribe = (listenerId: Symbol) =>
+  private unsubscribe = (listenerId: Symbol) =>
     (this.listeners = this.listeners.filter(({ id }) => id !== listenerId))
 }
 
@@ -29,8 +29,8 @@ export interface SingletnType<T = any> {
 }
 
 export const isIntanceOfSingletnState = <C extends SingletnType>(singletn: C | Class<C>): boolean =>
-  (singletn as SingletnType).setState !== undefined &&
-  (singletn as SingletnType).state !== undefined
+  (singletn as SingletnType)?.setState !== undefined &&
+  (singletn as SingletnType)?.state !== undefined
 
 const emittersMap = new Map<SingletnType<any>, Emitter>()
 
@@ -70,10 +70,10 @@ export const subscribeListener = <T>(
   deleteOnUnsubscribe?: boolean,
 ) => {
   const emitter = getEmitter(singletn)
-  const sub = emitter.subscribe(listener)
+  const { unsubscribe } = emitter.subscribe(listener)
 
   return () => {
-    sub.unsubscribe()
+    unsubscribe()
 
     if (deleteOnUnsubscribe) {
       deleteSingletn(singletn)
@@ -104,9 +104,15 @@ export const getSingletn = <C extends SingletnType>(singletn: C | Class<C>): C =
 export class SingletnState<State = any> {
   public state!: State
   protected className: string = ''
+  private instanceId: string = ''
 
   constructor() {
     this.className = this.constructor.name
+
+    if (isDevtools) {
+      this.instanceId = `${Math.random() * Math.random()}`.replace('0.', '')
+      instancesMap.set(this.instanceId, this)
+    }
   }
 
   public setState = (
@@ -131,7 +137,7 @@ export class SingletnState<State = any> {
           singletnName: this.className,
           prevState,
           nextState: this.state,
-          id: `${Math.random() * Math.random()}`.replace('0.', ''),
+          id: this.instanceId,
         } as any)
       }
     }
@@ -147,11 +153,13 @@ export class SingletnState<State = any> {
  * └─────────────────────────────────┘
  */
 let devtoolsEmitter: Emitter
-const isDevtools = process.env.NODE_ENV === 'development' && window
+let instancesMap: Map<string, SingletnType>
+const isDevtools = process.env.NODE_ENV === 'development' && window && typeof window !== 'undefined'
 let getTraces: (() => any[]) | null = null
 
 if (isDevtools) {
   devtoolsEmitter = new Emitter()
+  instancesMap = new Map<string, SingletnType>()
 
   import('./tracers').then(imported => {
     getTraces = imported.default
@@ -160,5 +168,7 @@ if (isDevtools) {
   // @ts-ignore
   window.$singletn = {
     emitter: devtoolsEmitter,
+    // @ts-ignore
+    emit: ({ id, revertToState }) => instancesMap.get(id)?.setState(revertToState),
   }
 }

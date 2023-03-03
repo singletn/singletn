@@ -26,6 +26,10 @@ test:
 test/watch:
 	${YARN} jest --watch
 
+.PHONY: test/coverage
+test/coverage:
+	${YARN} jest --coverage
+
 .PHONY: build
 build:
 	cd packages/core && $(YARN) build
