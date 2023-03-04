@@ -11,6 +11,14 @@ type Emission = {
   methodName: string
 }
 
+const handleRevertToState = async (message: { revertToState: unknown; id: string }) => {
+  chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+    if (typeof tab.id === 'number') {
+      chrome.tabs.sendMessage(tab.id, message)
+    }
+  })
+}
+
 function App() {
   const [emissions, setEmissions] = useState<Emission[]>([])
   const [inspecting, setInspecting] = useState<Emission | null>()
@@ -59,31 +67,73 @@ function App() {
               </div>
             </li>
             {inspecting?.id === e.id && (
-              <li
-                className={app.emission}
-                style={{ height: 'auto', paddingBottom: 16, borderTop: 'none' }}
-              >
-                <ReactDiffViewer
-                  oldValue={JSON.stringify(inspecting?.prevState, null, 2)}
-                  newValue={JSON.stringify(inspecting?.nextState, null, 2)}
-                  splitView
-                  useDarkTheme
-                  compareMethod={DiffMethod.WORDS_WITH_SPACE}
-                  styles={{
-                    variables: {
-                      dark: {
-                        diffViewerTitleColor: 'white',
+              <>
+                <li
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                >
+                  <button
+                    style={{
+                      zIndex: 100,
+                      padding: '2px 4px',
+                      fontSize: '0.75rem',
+                      fontWeight: 'normal',
+                    }}
+                    onClick={ev => {
+                      handleRevertToState({
+                        id: e.id,
+                        revertToState: inspecting?.prevState,
+                      })
+                      ev.stopPropagation()
+                    }}
+                  >
+                    Revert to previous state
+                  </button>
+                  <button
+                    style={{
+                      zIndex: 100,
+                      padding: '2px 4px',
+                      fontSize: '0.75rem',
+                      fontWeight: 'normal',
+                    }}
+                    onClick={ev => {
+                      handleRevertToState({
+                        id: e.id,
+                        revertToState: inspecting?.nextState,
+                      })
+
+                      ev.stopPropagation()
+                    }}
+                  >
+                    Revert to next state
+                  </button>
+                </li>
+
+                <li
+                  className={app.emission}
+                  style={{ height: 'auto', paddingBottom: 16, borderTop: 'none' }}
+                >
+                  <ReactDiffViewer
+                    oldValue={JSON.stringify(inspecting?.prevState, null, 2)}
+                    newValue={JSON.stringify(inspecting?.nextState, null, 2)}
+                    splitView
+                    useDarkTheme
+                    compareMethod={DiffMethod.WORDS_WITH_SPACE}
+                    styles={{
+                      variables: {
+                        dark: {
+                          diffViewerTitleColor: 'white',
+                        },
                       },
-                    },
-                    gutter: {
-                      boxSizing: 'border-box',
-                      minWidth: 16,
-                    },
-                  }}
-                  leftTitle="Previous State"
-                  rightTitle="New State"
-                />
-              </li>
+                      gutter: {
+                        boxSizing: 'border-box',
+                        minWidth: 16,
+                      },
+                    }}
+                    leftTitle={<div className="diff-header">Previous State </div>}
+                    rightTitle={<div className="diff-header">New State </div>}
+                  />
+                </li>
+              </>
             )}
           </>
         ))}

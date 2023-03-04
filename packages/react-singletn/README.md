@@ -62,6 +62,7 @@ import { useSingletn } from '@singletn/react-singletn'
 ```
 
 After that, we can replace the React.setState hook with `useSingletn` hook.
+
 ```diff
 - const [count, setCount] = useState(0)
 + const { state, increase } = useSingletn(CounterState)
@@ -130,7 +131,7 @@ export const App = () => {
 
 ## Share globally and locally
 
-If your intention is to share the state globally, you can then use simply the reference to the class inside the `useSingletn` call. However, you can create local states by creating instances of those classes.
+If your intention is to share the state globally, you can then use simply the reference to the class inside the `useSingletn` call. However, you can create local states by using `useLocalSingletn` instead.
 
 ```js
 export const App = () => {
@@ -144,8 +145,8 @@ export const App = () => {
 
 export const App = () => {
   // creates a local state for User
-  const localUser = React.useRef(new User())
-  const user = useSingletn(localUser.current)
+  // This state will be deleted when component unmounts
+  const user = useLocalSingletn(User)
 
   return (
     // ...
@@ -159,9 +160,6 @@ In order to configure the behaviour of your local singletn instance, you can mak
 ```js
 export const App = () => {
   const user = useSingletn(User, {
-    // whether or not you want the singletn to be deleted when component unmounts.
-    // Use `true` when the singletn used is for a local state.
-    deleteOnUnmount: false,
     // receive a callback with the new state when there's a change
     onUpdate: (nextState) => {},
     // a function to resolve whether or not the changes to the state should trigger a rerender
@@ -180,12 +178,12 @@ export const App = () => {
 
 Note that the options object only acept one option between `shouldUpdate` and `watchKeys`.
 
-## `Singletn` component
+## `SingletnController` component
 
-This package also exports a `Singletn` component. This allows you to avoid re-rendering your whole component when your state changes.
+This package also exports a `SingletnController` component. This allows you to avoid re-rendering your whole component when your state changes.
 
 ```js
-import { SingletnState, Singletn, getSingletn } from '@singletn/react-singletn'
+import { SingletnState, SingletnController, getSingletn } from '@singletn/react-singletn'
 
 interface State {
   count: number
@@ -207,11 +205,11 @@ function App() {
     <div>
       <h1>Singletn Playground</h1>
       <div>
-        <Singletn singletn={Counter} watch="count">
+        <SingletnController singletn={Counter} watchKeys="count">
           {({ state }) => (
             <h2>Count is {state.count}</h2>
           )}
-        </Singletn>
+        </SingletnController>
         <button onClick={decrease}>-</button>
         <button onClick={increase}>+</button>
       </div>
@@ -221,7 +219,7 @@ function App() {
 
 ```
 
-`Singletn` component makes use of [render props pattern](https://reactjs.org/docs/render-props.html) in order to allow you to re-render only specific parts of the components, so that you don't have to do a complete re-render every time a small part of the state changes.
+`SingletnController` component makes use of [render props pattern](https://reactjs.org/docs/render-props.html) in order to allow you to re-render only specific parts of the components, so that you don't have to do a complete re-render every time a small part of the state changes.
 
 ## Prevent rerenders
 
@@ -242,8 +240,8 @@ const { increase, decrease } = getSingletn(Counter)
 // in essence, same approach as above, but with memo.
 const { increase, decrease } = React.useMemo(() => getSingletn(Counter), [])
 
-// if using the Singletn component, we can pass an empty array as `watch` prop
-<Singletn singletn={Counter} watch={[]}></Singletn>
+// if using the SingletnController component, we can pass an empty array as `watch` prop
+<SingletnController singletn={Counter} watch={[]}>{singletn => ( /* component */)}</SingletnController>
 ```
 
 ## Other ways to store your state

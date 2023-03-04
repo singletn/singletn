@@ -1,129 +1,215 @@
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   subscribeListener,
   findSingletn,
   SingletnType,
   isIntanceOfSingletnState,
+  createSingletnInstance,
 } from '@singletn/core'
 
 type Class<T> = new (...args: any[]) => T
+type MaybeArray<T> = T | T[]
 
-interface BaseConfig<T> {
-  deleteOnUnmount?: boolean
-  onUpdate?: (nextState: T) => void
+type BaseConfig<State> = {
+  /**
+   * Callback for when the state changes.
+   *
+   * @param nextState  the state that caused the update
+   * @returns void
+   */
+  onUpdate?: (nextState: State) => void
 }
 
-interface ConfigWithUpdater<T> extends BaseConfig<T> {
-  shouldUpdate?: (nextState: SingletnType['state'], prevState: SingletnType['state']) => boolean
+type ConfigWithUpdater<State> = BaseConfig<State> & {
+  /**
+   * A function that should return a `boolean` to determine whether or not the hook should update,
+   * based on the change that happened on the state.
+   *
+   * @param nextState the state that caused the update
+   * @param prevState the state prior to being updated
+   * @returns boolean
+   */
+  shouldUpdate?: (prevState: SingletnType['state'], nextState: SingletnType['state']) => boolean
 }
 
-interface ConfigWithKeysToObserve<T> extends BaseConfig<T> {
-  watchKeys?: Array<keyof T>
+type ConfigWithKeysToObserve<State, S extends SingletnType<State>> = BaseConfig<State> & {
+  /**
+   * An array of keys to watch. The keys should be a keyof typeof State
+   */
+  watchKeys?: MaybeArray<keyof S['state']>
 }
 
-type Config<T> = ConfigWithKeysToObserve<T> | ConfigWithUpdater<T>
+type Config<State, S extends SingletnType<State>> =
+  | ConfigWithKeysToObserve<State, S>
+  | ConfigWithUpdater<State>
 
-export function useSingletn<T, C extends SingletnType<T>>(
-  singletn: C | Class<C>,
-  config?: Config<T>,
-): C {
-  const [, forceUpdate] = useState(false)
-  const instance = useMemo(
-    () =>
-      isIntanceOfSingletnState(singletn)
-        ? (singletn as C)
-        : (findSingletn(singletn as Class<C>) as C),
-    [],
+function useBaseSingletn<State, S extends SingletnType<State>>(
+  singletn: S | Class<S>,
+  configurationParams: Config<State, S> = {},
+  onUpdate: () => void,
+  deleteOnUnmount = false,
+): S {
+  const instance = useRef(
+    isIntanceOfSingletnState(singletn)
+      ? (singletn as S)
+      : (findSingletn(singletn as Class<S>) as S),
   )
+  const configs = useRef(configurationParams)
 
-  if (!isIntanceOfSingletnState(instance)) {
-    throw new Error('SingletnState used does not meet the required implementation')
-  }
-
-  const update = useCallback(
-    nextState => {
-      forceUpdate(c => !c)
-      config?.onUpdate?.(nextState)
-    },
-    [config?.onUpdate],
-  )
+  const update = useCallback(nextState => {
+    onUpdate()
+    configs.current.onUpdate?.(nextState)
+  }, [])
 
   useEffect(() => {
-    const unsubscribe = subscribeListener(
-      instance,
-      ({ nextState, prevState }) => {
-        if (isIntanceOfSingletnState((nextState as never) || {}) || !nextState) {
-          forceUpdate(c => !c)
-          return
-        }
-        if (!config || !('shouldUpdate' in config || 'watchKeys' in config)) {
-          update(nextState)
-          return
-        }
+    const config = configs.current || {}
 
-        // Detect if should update when using shouldUpdate resolver
-        if ('shouldUpdate' in config && config.shouldUpdate?.(nextState || {}, prevState || {})) {
+    const unsubscribe = subscribeListener(
+      instance.current,
+      ({ nextState, prevState }) => {
+        if (!config || ['shouldUpdate', 'watchKeys'].every(key => !(key in config))) {
           update(nextState)
-        }
-        // Detect if should update when using watchKeys array
-        else if ('watchKeys' in config) {
-          if (config.watchKeys?.length === 0) {
-            return
+        } else if ('shouldUpdate' in config) {
+          const { shouldUpdate } = config as ConfigWithUpdater<State>
+          if (shouldUpdate?.(prevState || {}, nextState || {})) {
+            update(nextState)
           }
+        } else if ('watchKeys' in config) {
+          const { watchKeys } = config as ConfigWithKeysToObserve<State, S>
+          const watchKeysArray = Array.isArray(watchKeys)
+            ? watchKeys
+            : ([watchKeys] as (keyof S['state'])[])
 
           if (
-            config.watchKeys?.reduce(
-              (acc, dep) =>
-                acc ||
-                ((Boolean(nextState?.[dep]) &&
-                  JSON.stringify(nextState?.[dep]) !== JSON.stringify(prevState?.[dep])) as never),
-              false as never,
+            watchKeysArray.reduce(
+              (acc: boolean, dep) =>
+                acc || !deepEquals(nextState?.[dep] || {}, prevState?.[dep] || {}),
+              false,
             )
           ) {
             update(nextState)
           }
         }
       },
-      config?.deleteOnUnmount || false,
+      deleteOnUnmount,
     )
 
     return unsubscribe
-  }, [instance, update])
+  }, [])
 
-  return instance
+  return instance.current!
 }
 
-export function useSingletnState<T, C extends SingletnType<T>>(
-  singletn: C | Class<C>,
-  config?: Config<T>,
-): C['state'] {
-  const { state } = useSingletn(singletn, config)
+/**
+ *
+ * `useSingletn` will either use an existing singletn or create one if
+ * there's none registered with current SingletnState based singletn.
+ *
+ * @param singletn The class or its instance that will be accessed
+ * @param config Configuration object
+ *
+ * @returns
+ */
+export function useSingletn<State, S extends SingletnType<State>>(
+  singletn: S | Class<S>,
+  config?: Config<State, S>,
+): S {
+  const [, forceUpdate] = useState(Number.MIN_SAFE_INTEGER)
 
-  return state
+  return useBaseSingletn(singletn, config, () => forceUpdate(d => ++d))
 }
 
-interface SingletnProps<T, S extends SingletnType<T>> {
+/**
+ *
+ * `useLocalSingletn` will create a new instance of the SingletnState
+ * class. This hook is to be used for local states, as the state will
+ * not persist after the component unmounts.
+ *
+ * @param singletn The class or its instance that will be accessed
+ * @param config Configuration object
+ *
+ * @returns Instance of SingletnState class
+ */
+export function useLocalSingletn<State, S extends SingletnType<State>>(
+  singletn: S | Class<S>,
+  config?: Config<State, S>,
+): S {
+  const [, forceUpdate] = useState(Number.MIN_SAFE_INTEGER)
+
+  const instance = useRef(
+    isIntanceOfSingletnState(singletn)
+      ? singletn
+      : (createSingletnInstance(singletn as Class<S>) as S),
+  )
+
+  return useBaseSingletn(instance.current, config, () => forceUpdate(d => ++d), true)
+}
+
+/**
+ *
+ * @param singletn  The class or its instance that will be accessed
+ * @param config Configuration object
+ * @returns
+ */
+export function useSingletnState<State, S extends SingletnType<State>>(
+  singletn: S | Class<S>,
+  config?: Config<State, S>,
+): S['state'] {
+  return useSingletn(singletn, config).state
+}
+
+type SingletnProps<State, S extends SingletnType<State>> = ConfigWithKeysToObserve<State, S> & {
   children: (singletn: S) => React.ReactElement | null
-  watch: keyof S['state'] | (keyof S['state'])[]
   singletn: S | Class<S>
-  deleteOnUnmount?: boolean
-  onUpdate?: (nextState: T) => void
 }
 
-export function Singletn<T, S extends SingletnType<T>>({
+/**
+ * Controller to use state updates only on parts of the JSX
+ */
+export function SingletnController<State, S extends SingletnType<State>>({
   children,
-  watch,
   singletn,
-  deleteOnUnmount,
-  onUpdate,
-}: SingletnProps<T, S>) {
-  const s = useSingletn(singletn, {
-    watchKeys: Array.isArray(watch) ? watch : [watch],
-    deleteOnUnmount,
-    onUpdate,
-  })
+  ...config
+}: SingletnProps<State, S>) {
+  const s = useSingletn(singletn, config)
 
   return children(s)
 }
 
 export * from '@singletn/core'
+
+function deepEquals(
+  value: object | string | number | boolean,
+  comparer: object | string | number | boolean,
+) {
+  if (typeof value !== typeof comparer) return false
+  if (typeof value !== 'object') {
+    if (Number.isNaN(value) && Number.isNaN(comparer)) return true
+    return value === comparer
+  }
+  if (value === null || comparer === null) return value === comparer
+  if (value === comparer) return true
+  if (Array.isArray(value) && Array.isArray(comparer)) {
+    if (value.length !== comparer.length) return false
+    for (let i = 0; i < value.length; i += 1) {
+      if (!deepEquals(value[i], comparer[i])) return false
+    }
+    return true
+  }
+
+  if (Array.isArray(value) || Array.isArray(comparer)) return false
+
+  if (typeof value !== 'object' && typeof comparer !== 'object') return false
+
+  const valueKeys = Object.keys(value)
+  const comparerKeys = Object.keys(comparer || {})
+  if (valueKeys.length !== comparerKeys.length) return false
+
+  for (let i = 0; i < valueKeys.length; i += 1) {
+    const key = valueKeys[i]
+    // @ts-expect-error
+    if (!(comparer || {}).hasOwnProperty(key) || !deepEquals(value[key], (comparer || {})[key]))
+      return false
+  }
+  return true
+}

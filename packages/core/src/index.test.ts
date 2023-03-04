@@ -1,4 +1,4 @@
-import { getSingletn, singletnsMap, deleteSingletn, SingletnState } from '.'
+import { getSingletn, singletnsMap, deleteSingletn, SingletnState, findSingletn } from '.'
 
 describe('@singletn/core tests', () => {
   beforeAll(() => {
@@ -11,6 +11,12 @@ describe('@singletn/core tests', () => {
 
   beforeEach(() => {
     singletnsMap.clear()
+  })
+
+  it("Throws if given parameter isn't a SingletnState", () => {
+    expect(() => {
+      findSingletn(Date as any)
+    }).toThrowError('SingletnState used does not meet the required implementation')
   })
 
   it('should create singletn on map when getting singletn', () => {
