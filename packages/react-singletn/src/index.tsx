@@ -4,6 +4,7 @@ import {
   findSingletn,
   SingletnType,
   isIntanceOfSingletnState,
+  createSingletnInstance,
 } from '@singletn/core'
 
 type Class<T> = new (...args: any[]) => T
@@ -61,10 +62,6 @@ function useBaseSingletn<State, S extends SingletnType<State>>(
   }, [])
 
   useEffect(() => {
-    if (!isIntanceOfSingletnState(instance.current)) {
-      throw new Error('SingletnState used does not meet the required implementation')
-    }
-
     const config = configs.current || {}
 
     const unsubscribe = subscribeListener(
@@ -140,7 +137,9 @@ export function useLocalSingletn<State, S extends SingletnType<State>>(
   const [, forceUpdate] = useState(Number.MIN_SAFE_INTEGER)
 
   const instance = useRef(
-    isIntanceOfSingletnState(singletn) ? (singletn as S) : new (singletn as Class<S>)(),
+    isIntanceOfSingletnState(singletn)
+      ? singletn
+      : (createSingletnInstance(singletn as Class<S>) as S),
   )
 
   return useBaseSingletn(instance.current, config, () => forceUpdate(d => ++d), true)

@@ -47,8 +47,21 @@ export const getEmitter = (singletn: SingletnType<any>): Emitter => {
 /** @private */
 export const singletnsMap = new Map<Class<SingletnType<any>>, SingletnType<any>>()
 
+export const createSingletnInstance = <C>(c: Class<SingletnType<any>>): SingletnType<C> => {
+  const cont = new c()
+
+  if (!isIntanceOfSingletnState(cont)) {
+    throw new Error('SingletnState used does not meet the required implementation')
+  }
+
+  return cont
+}
+
 export const findSingletn = <C>(c: Class<SingletnType<any>>): SingletnType<C> => {
-  if (!singletnsMap.has(c)) singletnsMap.set(c, new c())
+  if (!singletnsMap.has(c)) {
+    const cont = createSingletnInstance(c)
+    singletnsMap.set(c, cont)
+  }
 
   return singletnsMap.get(c)!
 }

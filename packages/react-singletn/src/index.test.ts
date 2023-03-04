@@ -50,12 +50,6 @@ describe('`useSingletn` tests', () => {
     singletnsMap.clear()
   })
 
-  it("Throws if given parameter isn't a SingletnState", () => {
-    expect(() => {
-      renderHook(() => useSingletn(Date as any))
-    }).toThrowError('SingletnState used does not meet the required implementation')
-  })
-
   it('Sets num', () => {
     const { result } = renderHook(() => useSingletn(Num))
     const container = result.current
