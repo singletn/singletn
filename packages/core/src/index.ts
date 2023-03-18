@@ -143,15 +143,19 @@ export class SingletnState<State = any> {
       }
 
       if (isDevtools && getTraces) {
-        const trace = getTraces()[2]
+        try {
+          const trace = getTraces()[2]
 
-        devtoolsEmitter.emit({
-          methodName: trace.function,
-          singletnName: this.className,
-          prevState,
-          nextState: this.state,
-          id: this.instanceId,
-        } as any)
+          devtoolsEmitter.emit({
+            methodName: trace.function,
+            singletnName: this.className,
+            prevState,
+            nextState: this.state,
+            id: this.instanceId,
+          } as any)
+        } catch (e) {
+          console.error(e)
+        }
       }
     }
   }
