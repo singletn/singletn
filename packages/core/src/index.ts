@@ -23,14 +23,14 @@ export class Emitter {
 
 export interface SingletnType<T = any> {
   setState: (updater: Partial<T> | ((prevState: T) => Partial<T> | null), silent?: boolean) => void
-  state: T
+  getState: () => T
   destroy: () => void
   __destroyInternalCleanup?: () => void
 }
 
 export const isIntanceOfSingletnState = <C extends SingletnType>(singletn: C | Class<C>): boolean =>
   (singletn as SingletnType)?.setState !== undefined &&
-  (singletn as SingletnType)?.state !== undefined
+  (singletn as SingletnType)?.getState() !== undefined
 
 const emittersMap = new Map<SingletnType<any>, Emitter>()
 
@@ -115,7 +115,7 @@ export const getSingletn = <C extends SingletnType>(singletn: C | Class<C>): C =
   isIntanceOfSingletnState(singletn) ? (singletn as C) : (findSingletn(singletn as Class<C>) as C)
 
 export class SingletnState<State = any> {
-  public state!: State
+  protected state!: State
   protected className: string = ''
   private instanceId: string = ''
 
@@ -127,6 +127,8 @@ export class SingletnState<State = any> {
       instancesMap.set(this.instanceId, this)
     }
   }
+
+  public getState = () => this.state
 
   public setState = (
     updater: Partial<State> | ((prevState: State) => Partial<State> | null),
@@ -173,19 +175,20 @@ let devtoolsEmitter: Emitter
 let instancesMap: Map<string, SingletnType>
 const isDevtools = process.env.NODE_ENV === 'development' && window && typeof window !== 'undefined'
 let getTraces: (() => any[]) | null = null
+;(() => {
+  if (isDevtools && typeof window !== 'undefined') {
+    devtoolsEmitter = new Emitter()
+    instancesMap = new Map<string, SingletnType>()
 
-if (isDevtools) {
-  devtoolsEmitter = new Emitter()
-  instancesMap = new Map<string, SingletnType>()
+    import('./tracers').then(imported => {
+      getTraces = imported.default
+    })
 
-  import('./tracers').then(imported => {
-    getTraces = imported.default
-  })
-
-  // @ts-ignore
-  window.$singletn = {
-    emitter: devtoolsEmitter,
     // @ts-ignore
-    emit: ({ id, revertToState }) => instancesMap.get(id)?.setState(revertToState),
+    window.$singletn = {
+      emitter: devtoolsEmitter,
+      // @ts-ignore
+      emit: ({ id, revertToState }) => instancesMap.get(id)?.setState(revertToState),
+    }
   }
-}
+})()

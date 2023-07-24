@@ -49,6 +49,8 @@ export class IndexedDBSingletn<State = any> {
     })
   }
 
+  public getState = () => this.state
+
   public setState = (updater: Partial<State> | ((prevState: State) => Partial<State> | null)) => {
     const prevState = { ...this.state }
 

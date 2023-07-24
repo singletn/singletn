@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSyncExternalStore, useRef } from 'react'
 import {
   subscribeListener,
   findSingletn,
@@ -29,56 +29,44 @@ type ConfigWithUpdater<State> = BaseConfig<State> & {
    * @param prevState the state prior to being updated
    * @returns boolean
    */
-  shouldUpdate?: (prevState: SingletnType['state'], nextState: SingletnType['state']) => boolean
+  shouldUpdate?: (prevState: State, nextState: State) => boolean
 }
 
-type ConfigWithKeysToObserve<State, S extends SingletnType<State>> = BaseConfig<State> & {
+type ConfigWithKeysToObserve<State> = BaseConfig<State> & {
   /**
    * An array of keys to watch. The keys should be a keyof typeof State
    */
-  watchKeys?: MaybeArray<keyof S['state']>
+  watchKeys?: MaybeArray<keyof State>
 }
 
-type Config<State, S extends SingletnType<State>> =
-  | ConfigWithKeysToObserve<State, S>
-  | ConfigWithUpdater<State>
+type Config<State> = ConfigWithKeysToObserve<State> | ConfigWithUpdater<State>
 
-function useBaseSingletn<State, S extends SingletnType<State>>(
-  singletn: S | Class<S>,
-  configurationParams: Config<State, S> = {},
-  onUpdate: () => void,
+function singletnSubscription<State, S extends SingletnType<State>>(
+  instance: S,
+  config: Config<State> = {},
   deleteOnUnmount = false,
-): S {
-  const instance = useRef(
-    isIntanceOfSingletnState(singletn)
-      ? (singletn as S)
-      : (findSingletn(singletn as Class<S>) as S),
-  )
-  const configs = useRef(configurationParams)
-
-  const update = useCallback(nextState => {
-    onUpdate()
-    configs.current.onUpdate?.(nextState)
-  }, [])
-
-  useEffect(() => {
-    const config = configs.current || {}
+) {
+  return (listener: () => void) => {
+    const onChange = (nextState: State) => {
+      config.onUpdate?.(nextState)
+      listener()
+    }
 
     const unsubscribe = subscribeListener(
-      instance.current,
-      ({ nextState, prevState }) => {
+      instance,
+      ({ nextState, prevState }: { nextState: State; prevState: State }) => {
         if (!config || ['shouldUpdate', 'watchKeys'].every(key => !(key in config))) {
-          update(nextState)
+          onChange(nextState)
         } else if ('shouldUpdate' in config) {
           const { shouldUpdate } = config as ConfigWithUpdater<State>
-          if (shouldUpdate?.(prevState || {}, nextState || {})) {
-            update(nextState)
+          if (shouldUpdate?.(prevState || ({} as State), nextState || ({} as State))) {
+            onChange(nextState)
           }
         } else if ('watchKeys' in config) {
-          const { watchKeys } = config as ConfigWithKeysToObserve<State, S>
+          const { watchKeys } = config as ConfigWithKeysToObserve<State>
           const watchKeysArray = Array.isArray(watchKeys)
             ? watchKeys
-            : ([watchKeys] as (keyof S['state'])[])
+            : ([watchKeys] as (keyof State)[])
 
           if (
             watchKeysArray.reduce(
@@ -87,7 +75,7 @@ function useBaseSingletn<State, S extends SingletnType<State>>(
               false,
             )
           ) {
-            update(nextState)
+            onChange(nextState)
           }
         }
       },
@@ -95,9 +83,28 @@ function useBaseSingletn<State, S extends SingletnType<State>>(
     )
 
     return unsubscribe
-  }, [])
+  }
+}
 
-  return instance.current!
+function useBaseSingletn<State, S extends SingletnType<State>>(
+  singletn: S | Class<S>,
+  configurationParams: Config<State> = {},
+  deleteOnUnmount = false,
+): S {
+  const instance = useRef(
+    isIntanceOfSingletnState(singletn)
+      ? (singletn as S)
+      : (findSingletn(singletn as Class<S>) as S),
+  )
+
+  useSyncExternalStore(
+    singletnSubscription(instance.current, configurationParams, deleteOnUnmount),
+    instance.current.getState,
+  )
+
+  console.log(instance.current)
+
+  return instance.current
 }
 
 /**
@@ -112,11 +119,10 @@ function useBaseSingletn<State, S extends SingletnType<State>>(
  */
 export function useSingletn<State, S extends SingletnType<State>>(
   singletn: S | Class<S>,
-  config?: Config<State, S>,
+  config?: Config<State>,
 ): S {
-  const [, forceUpdate] = useState(Number.MIN_SAFE_INTEGER)
-
-  return useBaseSingletn(singletn, config, () => forceUpdate(d => ++d))
+  console.log('here.')
+  return useBaseSingletn(singletn, config)
 }
 
 /**
@@ -132,17 +138,15 @@ export function useSingletn<State, S extends SingletnType<State>>(
  */
 export function useLocalSingletn<State, S extends SingletnType<State>>(
   singletn: S | Class<S>,
-  config?: Config<State, S>,
+  config?: Config<State>,
 ): S {
-  const [, forceUpdate] = useState(Number.MIN_SAFE_INTEGER)
-
   const instance = useRef(
     isIntanceOfSingletnState(singletn)
       ? singletn
       : (createSingletnInstance(singletn as Class<S>) as S),
   )
 
-  return useBaseSingletn(instance.current, config, () => forceUpdate(d => ++d), true)
+  return useBaseSingletn(instance.current, config, true)
 }
 
 /**
@@ -153,12 +157,12 @@ export function useLocalSingletn<State, S extends SingletnType<State>>(
  */
 export function useSingletnState<State, S extends SingletnType<State>>(
   singletn: S | Class<S>,
-  config?: Config<State, S>,
-): S['state'] {
-  return useSingletn(singletn, config).state
+  config?: Config<State>,
+): State {
+  return (useSingletn(singletn, config) as S).getState()
 }
 
-type SingletnProps<State, S extends SingletnType<State>> = ConfigWithKeysToObserve<State, S> & {
+type SingletnProps<State, S extends SingletnType<State>> = ConfigWithKeysToObserve<State> & {
   children: (singletn: S) => React.ReactElement | null
   singletn: S | Class<S>
 }

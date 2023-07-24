@@ -32,6 +32,8 @@ export class LocalStorageSingletn<State = any> {
     this.state = Object.assign({}, state, storedState)
   }
 
+  public getState = () => this.state
+
   public setState = (updater: Partial<State> | ((prevState: State) => Partial<State> | null)) => {
     const prevState = { ...this.state }
     const nextState = updater instanceof Function ? updater(this.state) : updater

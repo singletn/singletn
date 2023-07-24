@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react-hooks'
-import { singletnsMap, SingletnState, getSingletn } from '@singletn/core/src'
+import { singletnsMap, SingletnState, getSingletn } from '@singletn/core'
 import { useLocalSingletn, useSingletn, useSingletnState } from '.'
 
 /**
