@@ -32,15 +32,15 @@ test/coverage:
 
 .PHONY: build
 build:
-	cd packages/core && $(YARN) build
-	cd packages/local-storage && $(YARN) build
-	cd packages/indexeddb && $(YARN) build
-	cd packages/react-singletn && $(YARN) build
+	(cd packages/core && $(YARN) build)
+	(cd packages/local-storage && $(YARN) build)
+	(cd packages/indexeddb && $(YARN) build)
+	(cd packages/react-singletn && $(YARN) build)
 
 .PHONY: publish
 publish:
 	${MAKE} build
-	cd packages/core && $(NPM) publish
-	cd packages/local-storage && $(NPM) publish
-	cd packages/indexeddb && $(NPM) publish
-	cd packages/react-singletn && $(NPM) publish
+	(cd packages/core && $(NPM) publish)
+	(cd packages/local-storage && $(NPM) publish)
+	(cd packages/indexeddb && $(NPM) publish)
+	(cd packages/react-singletn && $(NPM) publish)

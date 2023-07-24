@@ -121,11 +121,6 @@ export class SingletnState<State = any> {
 
   constructor() {
     this.className = this.constructor.name
-
-    if (isDevtools) {
-      this.instanceId = `${Math.random() * Math.random()}`.replace('0.', '')
-      instancesMap.set(this.instanceId, this)
-    }
   }
 
   public getState = () => this.state
@@ -143,52 +138,8 @@ export class SingletnState<State = any> {
       if (!silent) {
         getEmitter(this).emit({ nextState: this.state, prevState })
       }
-
-      if (isDevtools && getTraces) {
-        try {
-          const trace = getTraces()[2]
-
-          devtoolsEmitter.emit({
-            methodName: trace.function,
-            singletnName: this.className,
-            prevState,
-            nextState: this.state,
-            id: this.instanceId,
-          } as any)
-        } catch (e) {
-          console.error(e)
-        }
-      }
     }
   }
 
   public destroy = () => {}
 }
-
-/**
- * ┌─────────────────────────────────┐
- * │ From this line onwards, all you │
- * │ can see is devtools junk        │
- * └─────────────────────────────────┘
- */
-let devtoolsEmitter: Emitter
-let instancesMap: Map<string, SingletnType>
-const isDevtools = process.env.NODE_ENV === 'development' && window && typeof window !== 'undefined'
-let getTraces: (() => any[]) | null = null
-;(() => {
-  if (isDevtools && typeof window !== 'undefined') {
-    devtoolsEmitter = new Emitter()
-    instancesMap = new Map<string, SingletnType>()
-
-    import('./tracers').then(imported => {
-      getTraces = imported.default
-    })
-
-    // @ts-ignore
-    window.$singletn = {
-      emitter: devtoolsEmitter,
-      // @ts-ignore
-      emit: ({ id, revertToState }) => instancesMap.get(id)?.setState(revertToState),
-    }
-  }
-})()
