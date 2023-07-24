@@ -1,6 +1,6 @@
 {
   "name": "@singletn/local-storage",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "main": "./dist/cjs/index.js",
   "module": "./dist/index.js",
   "exports": "./dist/index.js",
@@ -21,7 +21,7 @@
     "build": "rm -rf dist && tsc -p ./tsconfig.json && tsc -p ./tsconfig-cjs.json"
   },
   "dependencies": {
-    "@singletn/core": "^0.0.9"
+    "@singletn/core": "^0.0.10"
   },
   "devDependencies": {
     "typescript": "^4.7.4"
