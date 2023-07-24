@@ -100,6 +100,7 @@ function useBaseSingletn<State, S extends SingletnType<State>>(
   useSyncExternalStore(
     singletnSubscription(instance.current, configurationParams, deleteOnUnmount),
     instance.current.getState,
+    instance.current.getState,
   )
 
   console.log(instance.current)
