@@ -122,7 +122,6 @@ export function useSingletn<State, S extends SingletnType<State>>(
   singletn: S | Class<S>,
   config?: Config<State>,
 ): S {
-  console.log('here.')
   return useBaseSingletn(singletn, config)
 }
 
