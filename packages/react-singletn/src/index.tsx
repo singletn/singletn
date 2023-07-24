@@ -103,8 +103,6 @@ function useBaseSingletn<State, S extends SingletnType<State>>(
     instance.current.getState,
   )
 
-  console.log(instance.current)
-
   return instance.current
 }
 
