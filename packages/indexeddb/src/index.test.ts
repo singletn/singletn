@@ -21,7 +21,8 @@ class ObjectContainerIndexedDb extends IndexedDBSingletn<ObjectContainerState> {
 
   public setAge = (age: number) => this.setState({ age })
 
-  public addItem = (item: string) => this.setState(s => ({ items: [...s.items, item] }))
+  public addItem = (item: string) =>
+    this.setState(s => ((console.log(s) as never) as null) || { items: [...s.items, item] })
 }
 
 const flushPromises = () => new Promise(setImmediate)

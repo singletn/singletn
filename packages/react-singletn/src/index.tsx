@@ -1,6 +1,6 @@
 import { useSyncExternalStore, useRef } from 'react'
 import {
-  subscribeListener,
+  Listener,
   findSingletn,
   SingletnType,
   isIntanceOfSingletnState,
@@ -52,35 +52,31 @@ function singletnSubscription<State, S extends SingletnType<State>>(
       listener()
     }
 
-    const unsubscribe = subscribeListener(
-      instance,
-      ({ nextState, prevState }: { nextState: State; prevState: State }) => {
-        if (!config || ['shouldUpdate', 'watchKeys'].every(key => !(key in config))) {
+    const unsubscribe = instance.subscribe(({ nextState, prevState }) => {
+      if (!config || ['shouldUpdate', 'watchKeys'].every(key => !(key in config))) {
+        onChange(nextState)
+      } else if ('shouldUpdate' in config) {
+        const { shouldUpdate } = config as ConfigWithUpdater<State>
+        if (shouldUpdate?.(prevState || ({} as State), nextState || ({} as State))) {
           onChange(nextState)
-        } else if ('shouldUpdate' in config) {
-          const { shouldUpdate } = config as ConfigWithUpdater<State>
-          if (shouldUpdate?.(prevState || ({} as State), nextState || ({} as State))) {
-            onChange(nextState)
-          }
-        } else if ('watchKeys' in config) {
-          const { watchKeys } = config as ConfigWithKeysToObserve<State>
-          const watchKeysArray = Array.isArray(watchKeys)
-            ? watchKeys
-            : ([watchKeys] as (keyof State)[])
-
-          if (
-            watchKeysArray.reduce(
-              (acc: boolean, dep) =>
-                acc || !deepEquals(nextState?.[dep] || {}, prevState?.[dep] || {}),
-              false,
-            )
-          ) {
-            onChange(nextState)
-          }
         }
-      },
-      deleteOnUnmount,
-    )
+      } else if ('watchKeys' in config) {
+        const { watchKeys } = config as ConfigWithKeysToObserve<State>
+        const watchKeysArray = Array.isArray(watchKeys)
+          ? watchKeys
+          : ([watchKeys] as (keyof State)[])
+
+        if (
+          watchKeysArray.reduce(
+            (acc: boolean, dep) =>
+              acc || !deepEquals(nextState?.[dep] || {}, prevState?.[dep] || {}),
+            false,
+          )
+        ) {
+          onChange(nextState)
+        }
+      }
+    }, deleteOnUnmount)
 
     return unsubscribe
   }
@@ -151,13 +147,13 @@ export function useLocalSingletn<State, S extends SingletnType<State>>(
  *
  * @param singletn  The class or its instance that will be accessed
  * @param config Configuration object
- * @returns
+ * @returns State of SingletnState instance
  */
 export function useSingletnState<State, S extends SingletnType<State>>(
   singletn: S | Class<S>,
   config?: Config<State>,
 ): State {
-  return (useSingletn(singletn, config) as S).getState()
+  return (useSingletn(singletn, config) as S).getState() as State
 }
 
 type SingletnProps<State, S extends SingletnType<State>> = ConfigWithKeysToObserve<State> & {

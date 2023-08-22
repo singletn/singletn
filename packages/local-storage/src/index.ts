@@ -1,8 +1,9 @@
-import { getEmitter } from '@singletn/core'
+import { Listener, Emitter, deleteSingletn } from '@singletn/core'
 
 export class LocalStorageSingletn<State = any> {
   public state!: State
   private singletnKey: string = ''
+  private emitter = new Emitter()
 
   constructor(singletnKey: string, state: State) {
     if (!localStorage) {
@@ -42,7 +43,7 @@ export class LocalStorageSingletn<State = any> {
         nextState instanceof Object ? Object.assign({}, this.state, nextState) : nextState
 
       if (!localStorage) {
-        getEmitter(this).emit({ nextState: this.state, prevState })
+        this.emitter.emit({ nextState: this.state, prevState })
         return
       }
 
@@ -53,7 +54,19 @@ export class LocalStorageSingletn<State = any> {
         )
       })
 
-      getEmitter(this).emit({ nextState: this.state, prevState })
+      this.emitter.emit({ nextState: this.state, prevState })
+    }
+  }
+
+  public subscribe = (listener: Listener<State>, deleteOnUnsubscribe?: boolean) => {
+    const unsubscribe = this.emitter.subscribe(listener)
+
+    return () => {
+      unsubscribe()
+
+      if (deleteOnUnsubscribe) {
+        deleteSingletn(this)
+      }
     }
   }
 

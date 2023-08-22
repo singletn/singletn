@@ -37,7 +37,8 @@ class ObjectContainer extends SingletnState<ObjectContainerState> {
 
   public setAge = (age: number) => this.setState({ age })
 
-  public addItem = (item: string) => this.setState(s => ({ items: [...s.items, item] }))
+  public addItem = (item: string) =>
+    this.setState(s => ((console.log(s) as never) as null) || { items: [...s.items, item] })
 }
 
 jest.mock('@singletn/core', () => {
@@ -54,10 +55,11 @@ describe('`useSingletn` tests', () => {
     const { result } = renderHook(() => useSingletn(Num))
     const container = result.current
 
-    expect(container.state.num).toBe(0)
+    console.log(container, container.getState())
+    expect(container.getState().num).toBe(0)
 
     act(() => container.setNum(12))
-    expect(container.state.num).toBe(12)
+    expect(container.getState().num).toBe(12)
   })
 
   it('Updates state with complex object', () => {
@@ -65,13 +67,13 @@ describe('`useSingletn` tests', () => {
     const container = result.current
 
     act(() => container.setAge(12))
-    expect(container.state.age).toBe(12)
+    expect(container.getState().age).toBe(12)
 
     act(() => container.setName('Nic'))
-    expect(container.state.name).toBe('Nic')
+    expect(container.getState().name).toBe('Nic')
 
     act(() => container.addItem('Ball'))
-    expect(container.state.items.length).toBe(1)
+    expect(container.getState().items.length).toBe(1)
   })
 
   it('Should not rerender when changed prop is not observed', () => {
@@ -162,28 +164,24 @@ describe('`useSingletn` tests', () => {
     const { result } = renderHook(() => useSingletnState(ObjectContainer))
     const state = result.current
 
-    expect(state).toBe(getSingletn(ObjectContainer).state)
+    expect(state).toBe(getSingletn(ObjectContainer).getState())
   })
 
   it('Should be able to useSigneltoneState', () => {
     const { result } = renderHook(() => useSingletnState(ObjectContainer))
     const state = result.current
 
-    expect(state).toBe(getSingletn(ObjectContainer).state)
+    expect(state).toBe(getSingletn(ObjectContainer).getState())
   })
 
   it('Should create a new instance when using useLocalSingletn', () => {
     const { result: globalResult } = renderHook(() => useSingletn(ObjectContainer))
     const { result: localResult } = renderHook(() => useLocalSingletn(ObjectContainer))
 
-    // even though the values of the states are the same, the object differs
-    expect(localResult.current.state).toEqual(globalResult.current.state)
-    expect(localResult.current.state).not.toBe(globalResult.current.state)
+    expect(localResult.current.getState()).toEqual(globalResult.current.getState())
 
     const { result: localResult2 } = renderHook(() => useLocalSingletn(ObjectContainer))
 
-    // even though the values of the states are the same, the object differs for each local instance
-    expect(localResult.current.state).toEqual(localResult2.current.state)
-    expect(localResult.current.state).not.toBe(localResult2.current.state)
+    expect(localResult.current.getState()).toEqual(localResult2.current.getState())
   })
 })

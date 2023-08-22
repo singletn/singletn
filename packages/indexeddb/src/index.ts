@@ -1,9 +1,10 @@
-import { getEmitter } from '@singletn/core'
+import { Listener, Emitter, deleteSingletn } from '@singletn/core'
 import { createInstance, dropInstance, INDEXEDDB, WEBSQL, LOCALSTORAGE } from 'localforage'
 
 export class IndexedDBSingletn<State = any> {
   public state!: State
 
+  private emitter = new Emitter()
   private instance: LocalForage
 
   constructor() {
@@ -45,8 +46,20 @@ export class IndexedDBSingletn<State = any> {
       )
 
       this.state = Object.assign({}, this.state, storedState) as State
-      getEmitter(this).emit({ nextState: this.state, prevState })
+      this.emitter.emit({ nextState: this.state, prevState })
     })
+  }
+
+  public subscribe = (listener: Listener, deleteOnUnsubscribe?: boolean) => {
+    const unsubscribe = this.emitter.subscribe(listener)
+
+    return () => {
+      unsubscribe()
+
+      if (deleteOnUnsubscribe) {
+        deleteSingletn(this)
+      }
+    }
   }
 
   public getState = () => this.state
@@ -61,7 +74,7 @@ export class IndexedDBSingletn<State = any> {
 
       this.setItems(nextState)
 
-      getEmitter(this).emit({ nextState: this.state, prevState })
+      this.emitter.emit({ nextState: this.state, prevState })
     }
   }
 
