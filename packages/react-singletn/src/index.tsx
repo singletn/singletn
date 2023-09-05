@@ -172,6 +172,8 @@ export function SingletnController<State, S extends SingletnType<State>>({
 }
 
 export * from '@singletn/core'
+export * from './context'
+export * from './as-signal'
 
 function deepEquals(
   value: object | string | number | boolean,

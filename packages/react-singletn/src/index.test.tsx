@@ -1,8 +1,10 @@
 import React, { PropsWithChildren } from 'react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { renderHook, act } from '@testing-library/react-hooks'
 import { singletnsMap, SingletnState, getSingletn, createSingletnInstance } from '@singletn/core'
 import { useLocalSingletn, useSingletn, useSingletnState } from '.'
 import { SingletnProvider, useSingletnContext } from './context'
+import { asSignal } from './as-signal'
 
 /**
  *  Tests for simple container
@@ -214,5 +216,24 @@ describe('`useSingletn` tests', () => {
 
     expect(resultObject.current).toEqual(objectInstance)
     expect(resultNum.current).toEqual(numInstance)
+  })
+
+  it('Should create a signal to update specific DOM nodes', async () => {
+    class Test extends SingletnState<{ test: string }> {
+      state = { test: 'This is a test' }
+
+      renderTest = asSignal(() => this.state.test, this)
+    }
+
+    const testInstance = getSingletn(Test)
+
+    render(<div>{testInstance.renderTest()}</div>)
+
+    expect(screen.getByText('This is a test')).not.toBeNull()
+
+    testInstance.setState({ test: 'This is a new test' })
+
+    await waitFor(() => expect(screen.queryByText('This is a test')).toBeNull())
+    expect(screen.getByText('This is a new test')).not.toBeNull()
   })
 })
