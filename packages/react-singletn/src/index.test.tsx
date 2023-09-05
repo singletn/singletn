@@ -1,6 +1,8 @@
+import React, { PropsWithChildren } from 'react'
 import { renderHook, act } from '@testing-library/react-hooks'
-import { singletnsMap, SingletnState, getSingletn } from '@singletn/core'
+import { singletnsMap, SingletnState, getSingletn, createSingletnInstance } from '@singletn/core'
 import { useLocalSingletn, useSingletn, useSingletnState } from '.'
+import { SingletnProvider, useSingletnContext } from './context'
 
 /**
  *  Tests for simple container
@@ -37,8 +39,7 @@ class ObjectContainer extends SingletnState<ObjectContainerState> {
 
   public setAge = (age: number) => this.setState({ age })
 
-  public addItem = (item: string) =>
-    this.setState(s => ((console.log(s) as never) as null) || { items: [...s.items, item] })
+  public addItem = (item: string) => this.setState(s => ({ items: [...s.items, item] }))
 }
 
 jest.mock('@singletn/core', () => {
@@ -55,7 +56,6 @@ describe('`useSingletn` tests', () => {
     const { result } = renderHook(() => useSingletn(Num))
     const container = result.current
 
-    console.log(container, container.getState())
     expect(container.getState().num).toBe(0)
 
     act(() => container.setNum(12))
@@ -183,5 +183,36 @@ describe('`useSingletn` tests', () => {
     const { result: localResult2 } = renderHook(() => useLocalSingletn(ObjectContainer))
 
     expect(localResult.current.getState()).toEqual(localResult2.current.getState())
+  })
+
+  it('Should have access to singletn instance from context', () => {
+    const instance = createSingletnInstance(ObjectContainer)
+
+    const wrapper = ({ children }: PropsWithChildren) => (
+      <SingletnProvider singletn={instance}>{children}</SingletnProvider>
+    )
+
+    const { result } = renderHook(() => useSingletnContext(instance), { wrapper })
+
+    expect(result.current).toEqual(instance)
+  })
+
+  it('Should return all instances that exist in nested contexts', () => {
+    const objectInstance = createSingletnInstance(ObjectContainer)
+    const numInstance = createSingletnInstance(Num)
+
+    const wrapper = ({ children }: PropsWithChildren) => (
+      <SingletnProvider singletn={objectInstance}>
+        <SingletnProvider singletn={numInstance}>{children}</SingletnProvider>
+      </SingletnProvider>
+    )
+
+    const { result: resultObject } = renderHook(() => useSingletnContext(objectInstance), {
+      wrapper,
+    })
+    const { result: resultNum } = renderHook(() => useSingletnContext(numInstance), { wrapper })
+
+    expect(resultObject.current).toEqual(objectInstance)
+    expect(resultNum.current).toEqual(numInstance)
   })
 })

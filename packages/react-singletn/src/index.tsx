@@ -1,14 +1,11 @@
-import { useSyncExternalStore, useRef } from 'react'
+import React, { useSyncExternalStore, useRef } from 'react'
 import {
-  Listener,
   findSingletn,
   SingletnType,
   isIntanceOfSingletnState,
   createSingletnInstance,
 } from '@singletn/core'
-
-type Class<T> = new (...args: any[]) => T
-type MaybeArray<T> = T | T[]
+import { Class, MaybeArray } from './types'
 
 type BaseConfig<State> = {
   /**
@@ -136,7 +133,7 @@ export function useLocalSingletn<State, S extends SingletnType<State>>(
 ): S {
   const instance = useRef(
     isIntanceOfSingletnState(singletn)
-      ? singletn
+      ? (singletn as S)
       : (createSingletnInstance(singletn as Class<S>) as S),
   )
 
