@@ -1,6 +1,6 @@
 {
   "name": "@singletn/indexeddb",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "main": "./dist/cjs/index.js",
   "module": "./dist/index.js",
   "exports": "./dist/index.js",
@@ -21,7 +21,7 @@
     "build": "rm -rf dist && tsc -p ./tsconfig.json && tsc -p ./tsconfig-cjs.json"
   },
   "dependencies": {
-    "@singletn/core": "^0.0.13",
+    "@singletn/core": "^0.0.14",
     "localforage": "^1.9.0"
   },
   "devDependencies": {
