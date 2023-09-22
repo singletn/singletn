@@ -21,21 +21,20 @@ class ObjectContainerIndexedDb extends IndexedDBSingletn<ObjectContainerState> {
 
   public setAge = (age: number) => this.setState({ age })
 
-  public addItem = (item: string) =>
-    this.setState(s => ((console.log(s) as never) as null) || { items: [...s.items, item] })
+  public addItem = (item: string) => this.setState(s => ({ items: [...s.items, item] }))
 }
 
 const flushPromises = () => new Promise(setImmediate)
 
 describe('Test `IndexedDBSingletn` class', () => {
   it('Should create container with default state', () => {
-    const container = new ObjectContainerIndexedDb()
+    const container = new ObjectContainerIndexedDb('container')
 
     expect(container.state).toEqual(defaultState)
   })
 
   it('Should set container state values and store on localStorage', async () => {
-    const container = new ObjectContainerIndexedDb()
+    const container = new ObjectContainerIndexedDb('container')
     const dbInstance = createInstance({ name: 'ObjectContainerIndexedDb' })
 
     // Age

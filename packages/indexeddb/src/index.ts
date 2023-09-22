@@ -1,17 +1,20 @@
-import { Listener, Emitter, deleteSingletn } from '@singletn/core'
+import { Listener, Emitter, deleteSingletn, SingletnType } from '@singletn/core'
 import { createInstance, dropInstance, INDEXEDDB, WEBSQL, LOCALSTORAGE } from 'localforage'
 
 export class IndexedDBSingletn<State = any> {
   public state!: State
 
-  private emitter = new Emitter()
+  private emitter = new Emitter<State>()
+  private instanceName: string
   private instance: LocalForage
 
-  constructor() {
+  constructor(name: string) {
     const prevState = { ...this.state }
 
+    this.instanceName = name
+
     this.instance = createInstance({
-      name: this.constructor.name,
+      name,
       driver: [INDEXEDDB, WEBSQL, LOCALSTORAGE],
     })
 
@@ -50,14 +53,14 @@ export class IndexedDBSingletn<State = any> {
     })
   }
 
-  public subscribe = (listener: Listener, deleteOnUnsubscribe?: boolean) => {
+  public subscribe = (listener: Listener<State>, deleteOnUnsubscribe?: boolean) => {
     const unsubscribe = this.emitter.subscribe(listener)
 
     return () => {
       unsubscribe()
 
       if (deleteOnUnsubscribe) {
-        deleteSingletn(this)
+        deleteSingletn(this as SingletnType)
       }
     }
   }
@@ -89,6 +92,6 @@ export class IndexedDBSingletn<State = any> {
 
   public clearDB = () =>
     dropInstance({
-      name: this.constructor.name,
+      name: this.instanceName,
     })
 }

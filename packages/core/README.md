@@ -68,7 +68,7 @@ The `setState` function accepts two parameters:
 | `updater`   | This parameter can either be a function that receives current state as a parameter and returns a new state or a partial/complete new state to be merged to current state. |
 | `silent` | Optional boolean parameter that defaults to `false`. When set to `true`, prevents emitting event to listeners |
 
-## Can my singletn be, well, not a singletn? 🤓
+## Can my singletn be, well, not a singleton? 🤓
 
 Well, yes! Although we must advise to use this carefully, here's one possible approach to do so:
 
@@ -91,7 +91,14 @@ const user = getSingletn(new User())
 console.log(getSingletn(user) === user) // true
 ```
 
-This happens because `getSingletn` detects if the parameter sent is an instance of a class, and, if so, returns that class straight away. Otherwise, it makes a lookup to a map that holds the instances of the singletns, returning the one with the key being the class passed as parameter. 
+This happens because `getSingletn` detects if the parameter sent is an instance of a class, and, if so, returns that instance straight away. Otherwise, it makes a lookup to a map that holds the instances of the singletns, returning the one with the key being the class passed as parameter.
+
+Alternatively, you can use `createSingletnInstance` helper
+
+```js
+const johnInstance = createSingletnInstance(User)
+const maryInstance = createSingletnInstance(User)
+```
 
 ## Clear everything
 
@@ -116,6 +123,10 @@ export class User extends SingletnState<UserState> {
   }
 }
 ```
+
+## React integration
+
+[`@singletn/react-singletn`](../react-singletn) provides a direct integration with react
 
 ## Other ways to store your state
 

@@ -1,21 +1,21 @@
 type Class<T> = new (...args: any[]) => T
 
-export type Listener<T = any> = (obj: { nextState: T; prevState: T }) => void
+export type Listener<T> = (obj: { nextState: T; prevState: T }) => void
 
-export class Emitter {
+export class Emitter<T> {
   private listeners: {
     id: Symbol
-    listener: Listener
+    listener: Listener<T>
   }[] = []
 
-  subscribe = (listener: Listener) => {
+  subscribe = (listener: Listener<T>) => {
     const id = Symbol()
     this.listeners.push({ id, listener })
 
     return () => this.unsubscribe(id)
   }
 
-  emit: Listener = data => this.listeners.forEach(({ listener }) => listener(data))
+  emit: Listener<T> = data => this.listeners.forEach(({ listener }) => listener(data))
 
   private unsubscribe = (listenerId: Symbol) =>
     (this.listeners = this.listeners.filter(({ id }) => id !== listenerId))
@@ -25,19 +25,26 @@ export interface SingletnType<T = any> {
   setState: (updater: Partial<T> | ((prevState: T) => Partial<T> | null), silent?: boolean) => void
   getState: () => T
   destroy: () => void
-  subscribe: (listener: Listener, deleteOnUnsubscribe?: boolean) => () => void
+  subscribe: (listener: Listener<T>, deleteOnUnsubscribe?: boolean) => () => void
   __destroyInternalCleanup?: () => void
 }
 
-export const isIntanceOfSingletnState = <C extends SingletnType>(singletn: C | Class<C>): boolean =>
-  (singletn as SingletnType)?.setState !== undefined &&
-  (singletn as SingletnType)?.getState !== undefined &&
-  (singletn as SingletnType)?.subscribe !== undefined
+export const isIntanceOfSingletnState = <C extends SingletnType>(
+  singletn: C | Class<C>,
+): boolean => {
+  const sngltn = singletn as SingletnType
+
+  return (
+    sngltn?.setState !== undefined &&
+    sngltn?.getState !== undefined &&
+    sngltn?.subscribe !== undefined
+  )
+}
 
 /** @private */
 export const singletnsMap = new Map<Class<SingletnType<any>>, SingletnType<any>>()
 
-export const createSingletnInstance = <C>(c: Class<SingletnType<any>>): SingletnType<C> => {
+export const createSingletnInstance = <C extends SingletnType>(c: Class<C>): C => {
   const cont = new c()
 
   if (!isIntanceOfSingletnState(cont)) {
@@ -80,7 +87,7 @@ export const deleteSingletn = <C extends SingletnType>(singletn: C | Class<C>) =
   destroySingletn(c)
 }
 
-const destroySingletn = (singletn: SingletnType) => {
+const destroySingletn = <C extends SingletnType>(singletn: C) => {
   singletn.destroy()
   singletn.__destroyInternalCleanup?.()
 }
@@ -90,7 +97,7 @@ export const getSingletn = <C extends SingletnType>(singletn: C | Class<C>): C =
 
 export class SingletnState<State = any> {
   protected state!: State
-  protected emitter: Emitter = new Emitter()
+  protected emitter = new Emitter<State>()
 
   public subscribe = (listener: Listener<State>, deleteOnUnsubscribe?: boolean) => {
     const unsubscribe = this.emitter.subscribe(listener)
@@ -99,7 +106,7 @@ export class SingletnState<State = any> {
       unsubscribe()
 
       if (deleteOnUnsubscribe) {
-        deleteSingletn(this)
+        deleteSingletn(this as SingletnState)
       }
     }
   }

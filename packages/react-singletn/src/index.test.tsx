@@ -2,7 +2,9 @@ import React, { PropsWithChildren } from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import { renderHook, act } from '@testing-library/react-hooks'
 import { singletnsMap, SingletnState, getSingletn, createSingletnInstance } from '@singletn/core'
-import { useLocalSingletn, useSingletn, useSingletnState } from '.'
+import { useLocalSingletn } from './hooks/use-local-singletn'
+import { useSingletn } from './hooks/use-singletn'
+import { useSingletnState } from './hooks/use-singletn-state'
 import { SingletnProvider, useSingletnContext } from './context'
 import { asSignal } from './as-signal'
 
@@ -231,7 +233,9 @@ describe('`useSingletn` tests', () => {
 
     expect(screen.getByText('This is a test')).not.toBeNull()
 
-    testInstance.setState({ test: 'This is a new test' })
+    act(() => {
+      testInstance.setState({ test: 'This is a new test' })
+    })
 
     await waitFor(() => expect(screen.queryByText('This is a test')).toBeNull())
     expect(screen.getByText('This is a new test')).not.toBeNull()

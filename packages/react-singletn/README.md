@@ -117,15 +117,15 @@ import { useSingletn } from '@singletn/react-singletn'
 import { User } from './User'
 
 export const App = () => {
-  const user = useSingletn(User)
+  const { getState, setName, setUser } = useSingletn(User)
 
   React.useEffect(() => {
     fetch('/user')
       .then(response => response.json)
-      .then(data => user.setUser(data))
+      .then(data => setUser(data))
   }, [])
 
-  return <input value={user.state.name} onChange={e => user.setName(e.target.value)} />
+  return <input value={getState().name} onChange={e => setName(e.target.value)} />
 }
 ```
 
@@ -229,19 +229,85 @@ If your component will only use the methods from the singletn instance, in order
 // simply tell the hook never to update
 const { increase, decrease } = useSingletn(Counter, { shouldUpdate: () => false });
 
-// the hook would only trigger a rerender if a key that's being 
-// watched changes, which will never happen in this case.
+// similar to react effect dependencies
 const { increase, decrease } = useSingletn(Counter, { watchKeys: [] });
 
-// instead of using the hook, you can just get the 
-// instance from the original singletn instances map.
+// instead of using the hook, you can just get the instance from the original singletn instances map.
 const { increase, decrease } = getSingletn(Counter)
-
-// in essence, same approach as above, but with memo.
-const { increase, decrease } = React.useMemo(() => getSingletn(Counter), [])
 
 // if using the SingletnController component, we can pass an empty array as `watch` prop
 <SingletnController singletn={Counter} watch={[]}>{singletn => ( /* component */)}</SingletnController>
+```
+
+### `asSignal`
+
+Using the `asSignal` decorator on your states allow you to skip the components re-render altogether. Here's how this can be done in order with the counter example:
+
+```ts
+import { SingletnState, SingletnController, getSingletn, asSignal } from '@singletn/react-singletn'
+
+interface State {
+  count: number
+}
+
+class Counter extends SingletnState<State> {
+  state = {
+    count: 0,
+  } as State
+
+  increase = () => this.setState(s => ({ count: s.count + 1 }))
+  decrease = () => this.setState(s => ({ count: s.count - 1 }))
+
+  displayCount = asSignal(() => this.state.count)
+}
+
+function App() {
+  const { increase, decrease, displayCount } = getContainer(Counter)
+
+  return (
+    <div>
+      <h1>Singletn Playground</h1>
+      <div>
+        <h2>Count is {state.displayCount()}</h2>
+
+        <button onClick={decrease}>-</button>
+        <button onClick={increase}>+</button>
+      </div>
+    </div>
+  )
+}
+```
+
+The code above wouldn't trigger a re-render of the `App` component. Instead, it will only update the DOM specifically where the counter is being displayed.
+
+## Context
+
+Although react-singletn isn't reliant on context, there are cases in which the context could be useful. In these cases, you can use `SingletnProvider`
+
+```ts
+const App = () => {
+  return [1, 2, 3].map((id) => (
+    <SingletnProvider singletn={Counter} key={id}>
+      <Countdown />
+    </SingletnProvider>
+  ))
+}
+
+const Countdown = () => {
+  const { increase, decrease, getState } = useSingletnContext(Counter)
+
+  const { count } = getState()
+
+  return (
+    <div>
+      <div>
+        <h2>Count is {count}</h2>
+        <button onClick={decrease}>-</button>
+        <button onClick={increase}>+</button>
+      </div>
+    </div>
+  )
+}
 ```
 
 ## Other ways to store your state

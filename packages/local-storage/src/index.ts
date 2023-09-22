@@ -1,9 +1,9 @@
-import { Listener, Emitter, deleteSingletn } from '@singletn/core'
+import { Listener, Emitter, deleteSingletn, SingletnType } from '@singletn/core'
 
 export class LocalStorageSingletn<State = any> {
   public state!: State
   private singletnKey: string = ''
-  private emitter = new Emitter()
+  private emitter = new Emitter<State>()
 
   constructor(singletnKey: string, state: State) {
     if (!localStorage) {
@@ -65,7 +65,7 @@ export class LocalStorageSingletn<State = any> {
       unsubscribe()
 
       if (deleteOnUnsubscribe) {
-        deleteSingletn(this)
+        deleteSingletn(this as SingletnType)
       }
     }
   }
