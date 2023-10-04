@@ -17,13 +17,16 @@ import { useBaseSingletn } from './use-base-singletn'
  * @returns Instance of SingletnState class
  */
 export function useLocalSingletn<State, S extends SingletnType<State>>(
-  singletn: S | Class<S>,
+  singletn: S | Class<S> | [Class<S>, ...ConstructorParameters<Class<S>>],
   config?: Config<State>,
 ): S {
+  const singletnInstance = Array.isArray(singletn) ? singletn[0] : singletn
+  const params = Array.isArray(singletn) ? singletn.slice(1) : []
+
   const instance = useRef(
-    isIntanceOfSingletnState(singletn)
-      ? (singletn as S)
-      : (createSingletnInstance(singletn as Class<S>) as S),
+    isIntanceOfSingletnState(singletnInstance)
+      ? (singletnInstance as S)
+      : createSingletnInstance(singletnInstance as Class<S>, ...params),
   )
 
   return useBaseSingletn(instance.current, config, true)

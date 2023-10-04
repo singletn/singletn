@@ -30,7 +30,7 @@ export interface SingletnType<T = any> {
 }
 
 export const isIntanceOfSingletnState = <C extends SingletnType>(
-  singletn: C | Class<C>,
+  singletn: C | Class<C> | [Class<C>, ...ConstructorParameters<Class<C>>],
 ): boolean => {
   const sngltn = singletn as SingletnType
 
@@ -44,8 +44,12 @@ export const isIntanceOfSingletnState = <C extends SingletnType>(
 /** @private */
 export const singletnsMap = new Map<Class<SingletnType<any>>, SingletnType<any>>()
 
-export const createSingletnInstance = <C extends SingletnType>(c: Class<C>): C => {
-  const cont = new c()
+export const createSingletnInstance = <C extends SingletnType>(
+  c: Class<C>,
+  ...constructorParams: ConstructorParameters<Class<C>>
+): C => {
+  console.log(constructorParams)
+  const cont = new c(...constructorParams)
 
   if (!isIntanceOfSingletnState(cont)) {
     throw new Error('SingletnState used does not meet the required implementation')
@@ -54,13 +58,18 @@ export const createSingletnInstance = <C extends SingletnType>(c: Class<C>): C =
   return cont
 }
 
-export const findSingletn = <C>(c: Class<SingletnType<any>>): SingletnType<C> => {
-  if (!singletnsMap.has(c)) {
-    const cont = createSingletnInstance(c)
-    singletnsMap.set(c, cont)
+export const findSingletn = <C extends SingletnType>(
+  c: Class<C> | [Class<C>, ...ConstructorParameters<Class<C>>],
+): C => {
+  const clazz = Array.isArray(c) ? c[0] : c
+  const params = Array.isArray(c) ? c.slice(1) : []
+
+  if (!singletnsMap.has(clazz)) {
+    const cont = createSingletnInstance(clazz, ...params)
+    singletnsMap.set(clazz, cont)
   }
 
-  return singletnsMap.get(c)!
+  return singletnsMap.get(clazz)! as C
 }
 
 export const clearSingletns = () => {
@@ -93,7 +102,7 @@ const destroySingletn = <C extends SingletnType>(singletn: C) => {
 }
 
 export const getSingletn = <C extends SingletnType>(singletn: C | Class<C>): C =>
-  isIntanceOfSingletnState(singletn) ? (singletn as C) : (findSingletn(singletn as Class<C>) as C)
+  isIntanceOfSingletnState(singletn) ? (singletn as C) : findSingletn(singletn as Class<C>)
 
 export class SingletnState<State = any> {
   protected state!: State
@@ -106,7 +115,7 @@ export class SingletnState<State = any> {
       unsubscribe()
 
       if (deleteOnUnsubscribe) {
-        deleteSingletn(this as SingletnState)
+        deleteSingletn(this as SingletnType)
       }
     }
   }

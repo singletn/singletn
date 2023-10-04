@@ -5,7 +5,7 @@ import { useSingletn } from './hooks/use-singletn'
 
 type SingletnProps<State, S extends SingletnType<State>> = Config<State> & {
   children: (singletn: S) => React.ReactElement | null
-  singletn: S | Class<S>
+  singletn: S | Class<S> | [Class<S>, ...ConstructorParameters<Class<S>>]
 }
 
 /**

@@ -46,6 +46,19 @@ class ObjectContainer extends SingletnState<ObjectContainerState> {
   public addItem = (item: string) => this.setState(s => ({ items: [...s.items, item] }))
 }
 
+class ClassWithConstructor extends SingletnState<{ test: number }> {
+  anotherVal: string
+
+  constructor(initialVal: number, anotherVal: string) {
+    super()
+    this.state = {
+      test: initialVal,
+    }
+
+    this.anotherVal = anotherVal
+  }
+}
+
 jest.mock('@singletn/core', () => {
   const singletn = require('../../core/src')
   return singletn
@@ -54,6 +67,21 @@ jest.mock('@singletn/core', () => {
 describe('`useSingletn` tests', () => {
   beforeEach(() => {
     singletnsMap.clear()
+  })
+
+  it('Instantiate with constructor value', () => {
+    const { result } = renderHook(() => useSingletn([ClassWithConstructor, 123]))
+    const container = result.current
+
+    expect(container.getState().test).toBe(123)
+  })
+
+  it('Instantiate with constructor multiple values', () => {
+    const { result } = renderHook(() => useSingletn([ClassWithConstructor, 123, 'val']))
+    const container = result.current
+
+    expect(container.getState().test).toBe(123)
+    expect(container.anotherVal).toBe('val')
   })
 
   it('Sets num', () => {

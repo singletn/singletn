@@ -13,7 +13,7 @@ import { useBaseSingletn } from './use-base-singletn'
  * @returns
  */
 export function useSingletn<State, S extends SingletnType<State>>(
-  singletn: S | Class<S>,
+  singletn: S | Class<S> | [Class<S>, ...ConstructorParameters<Class<S>>],
   config?: Config<State>,
 ): S {
   return useBaseSingletn(singletn, config)

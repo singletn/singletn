@@ -46,14 +46,16 @@ function singletnSubscription<State>(
 }
 
 export function useBaseSingletn<State, S extends SingletnType<State>>(
-  singletn: S | Class<S>,
+  singletn: S | Class<S> | [Class<S>, ...ConstructorParameters<Class<S>>],
   configurationParams: Config<State> = {},
   deleteOnUnmount = false,
 ): S {
+  const singletnInstance = Array.isArray(singletn) ? singletn[0] : singletn
+
   const instance = useRef(
-    isIntanceOfSingletnState(singletn as SingletnType)
+    isIntanceOfSingletnState(singletnInstance)
       ? (singletn as S)
-      : (findSingletn(singletn as Class<S>) as S),
+      : findSingletn(singletn as Class<S>),
   )
 
   useSyncExternalStore(

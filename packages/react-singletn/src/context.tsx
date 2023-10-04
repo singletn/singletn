@@ -30,10 +30,13 @@ export function SingletnProvider<State, S extends SingletnType<State>>({
   singletn: S | Class<S>
   config?: Config<State>
 }>) {
+  const singletnInstance = Array.isArray(singletn) ? singletn[0] : singletn
+  const params = Array.isArray(singletn) ? singletn.slice(1) : []
+
   const instance = useRef(
-    isIntanceOfSingletnState(singletn)
-      ? (singletn as S)
-      : (createSingletnInstance(singletn as Class<S>) as S),
+    isIntanceOfSingletnState(singletnInstance)
+      ? (singletnInstance as S)
+      : createSingletnInstance(singletnInstance as Class<S>, ...params),
   )
 
   const upperContext = useContext(SingletnContext)

@@ -1,6 +1,6 @@
 import { SingletnType } from '@singletn/core'
 import { Class, Config } from '../types'
-import { useSingletn } from './use-singletn'
+import { useBaseSingletn } from './use-base-singletn'
 
 /**
  *
@@ -9,8 +9,8 @@ import { useSingletn } from './use-singletn'
  * @returns State of SingletnState instance
  */
 export function useSingletnState<State, S extends SingletnType<State>>(
-  singletn: S | Class<S>,
+  singletn: S | Class<S> | [Class<S>, ...ConstructorParameters<Class<S>>],
   config?: Config<State>,
 ): State {
-  return (useSingletn(singletn, config) as S).getState() as State
+  return (useBaseSingletn(singletn, config) as S).getState() as State
 }
