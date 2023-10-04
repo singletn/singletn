@@ -48,7 +48,6 @@ export const createSingletnInstance = <C extends SingletnType>(
   c: Class<C>,
   ...constructorParams: ConstructorParameters<Class<C>>
 ): C => {
-  console.log(constructorParams)
   const cont = new c(...constructorParams)
 
   if (!isIntanceOfSingletnState(cont)) {

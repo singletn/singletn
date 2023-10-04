@@ -54,8 +54,8 @@ export function useBaseSingletn<State, S extends SingletnType<State>>(
 
   const instance = useRef(
     isIntanceOfSingletnState(singletnInstance)
-      ? (singletn as S)
-      : findSingletn(singletn as Class<S>),
+      ? (singletnInstance as S)
+      : (findSingletn(singletn as Class<S> | [Class<S>, ...ConstructorParameters<Class<S>>]) as S),
   )
 
   useSyncExternalStore(

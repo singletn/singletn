@@ -27,7 +27,7 @@ export function SingletnProvider<State, S extends SingletnType<State>>({
   config,
   children,
 }: PropsWithChildren<{
-  singletn: S | Class<S>
+  singletn: S | Class<S> | [Class<S>, ...ConstructorParameters<Class<S>>]
   config?: Config<State>
 }>) {
   const singletnInstance = Array.isArray(singletn) ? singletn[0] : singletn
@@ -42,11 +42,11 @@ export function SingletnProvider<State, S extends SingletnType<State>>({
   const upperContext = useContext(SingletnContext)
   const context = useRef(new Map(upperContext))
 
-  if (!context.current.has(singletn)) {
-    context.current.set(singletn, instance.current)
+  if (!context.current.has(singletnInstance)) {
+    context.current.set(singletnInstance, instance.current)
   }
 
-  useSingletn(singletn, config)
+  useSingletn(singletnInstance, config)
 
   return <SingletnContext.Provider value={context.current}>{children}</SingletnContext.Provider>
 }
