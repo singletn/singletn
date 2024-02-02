@@ -6,7 +6,7 @@ import { useLocalSingletn } from './hooks/use-local-singletn'
 import { useSingletn } from './hooks/use-singletn'
 import { useSingletnState } from './hooks/use-singletn-state'
 import { SingletnProvider, useSingletnContext } from './context'
-import { asSignal } from './as-signal'
+import { SingletnSignalState } from './as-signal'
 
 /**
  *  Tests for simple container
@@ -33,10 +33,13 @@ interface ObjectContainerState {
 }
 
 class ObjectContainer extends SingletnState<ObjectContainerState> {
-  state = {
-    name: '',
-    age: 0,
-    items: [] as string[],
+  constructor(name = '', age = 0, items = []) {
+    super()
+    this.state = {
+      name,
+      age,
+      items,
+    }
   }
 
   public setName = (name: string) => this.setState({ name })
@@ -192,18 +195,11 @@ describe('`useSingletn` tests', () => {
     expect(onUpdate).toHaveBeenCalled()
   })
 
-  it('Should be able to useSigneltoneState', () => {
+  it('Should be able to useSingletnState', () => {
     const { result } = renderHook(() => useSingletnState(ObjectContainer))
     const state = result.current
 
-    expect(state).toBe(getSingletn(ObjectContainer).getState())
-  })
-
-  it('Should be able to useSigneltoneState', () => {
-    const { result } = renderHook(() => useSingletnState(ObjectContainer))
-    const state = result.current
-
-    expect(state).toBe(getSingletn(ObjectContainer).getState())
+    expect(state).toEqual(getSingletn(ObjectContainer).getState())
   })
 
   it('Should create a new instance when using useLocalSingletn', () => {
@@ -229,6 +225,16 @@ describe('`useSingletn` tests', () => {
     expect(result.current).toEqual(instance)
   })
 
+  it('Should create singletn instance in context with constructor params', () => {
+    const wrapper = ({ children }: PropsWithChildren) => (
+      <SingletnProvider singletn={[ClassWithConstructor, 123, 'test']}>{children}</SingletnProvider>
+    )
+
+    const { result } = renderHook(() => useSingletnContext(ClassWithConstructor), { wrapper })
+
+    expect(result.current.getState().test).toEqual(123)
+  })
+
   it('Should return all instances that exist in nested contexts', () => {
     const objectInstance = createSingletnInstance(ObjectContainer)
     const numInstance = createSingletnInstance(Num)
@@ -248,11 +254,49 @@ describe('`useSingletn` tests', () => {
     expect(resultNum.current).toEqual(numInstance)
   })
 
+  it('Should return closest instance when multiple contexts with same Singletn', () => {
+    const wrapper = ({ children }: PropsWithChildren) => (
+      <SingletnProvider singletn={[ObjectContainer, 'Test 1']}>
+        <SingletnProvider singletn={[ObjectContainer, 'Test 2']}>{children}</SingletnProvider>
+      </SingletnProvider>
+    )
+
+    const { result: resultObject } = renderHook(() => useSingletnContext(ObjectContainer), {
+      wrapper,
+    })
+
+    expect(resultObject.current.getState().name).toEqual('Test 2')
+  })
+
+  it('Should re-render when state of contextual singletn changes', () => {
+    const onUpdate = jest.fn()
+
+    const wrapper = ({ children }: PropsWithChildren) => (
+      <SingletnProvider singletn={[ObjectContainer, 'Test 1']}>{children}</SingletnProvider>
+    )
+
+    const { result: resultObject } = renderHook(
+      () => useSingletnContext([ObjectContainer, 'Test 1'], { onUpdate }),
+      {
+        wrapper,
+      },
+    )
+
+    expect(resultObject.current.getState().name).toEqual('Test 1')
+
+    act(() => {
+      resultObject.current.setName('Test 2')
+    })
+
+    expect(resultObject.current.getState().name).toEqual('Test 2')
+    expect(onUpdate).toHaveBeenCalled()
+  })
+
   it('Should create a signal to update specific DOM nodes', async () => {
-    class Test extends SingletnState<{ test: string }> {
+    class Test extends SingletnSignalState<{ test: string }> {
       state = { test: 'This is a test' }
 
-      renderTest = asSignal(() => this.state.test, this)
+      renderTest = this.asSignal(() => this.state.test)
     }
 
     const testInstance = getSingletn(Test)

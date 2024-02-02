@@ -8,15 +8,21 @@ const SingletnContext = createContext(
 )
 
 export const useSingletnContext = <State, S extends SingletnType<State>>(
-  singletn?: S | Class<S>,
-) => {
+  singletn: S | Class<S> | [Class<S>, ...ConstructorParameters<Class<S>>],
+  config?: Config<S>,
+): S => {
+  const key = Array.isArray(singletn) ? singletn[0] : singletn
   const context = useContext(SingletnContext)
 
-  if (singletn) {
-    return context.get(singletn)
+  console.log(context, key)
+
+  const instance = context.get(key)
+
+  if (!instance) {
+    throw new Error('Singletn instance not found')
   }
 
-  return context
+  return useSingletn(instance, config) as S
 }
 
 /**
@@ -24,14 +30,13 @@ export const useSingletnContext = <State, S extends SingletnType<State>>(
  */
 export function SingletnProvider<State, S extends SingletnType<State>>({
   singletn,
-  config,
   children,
 }: PropsWithChildren<{
   singletn: S | Class<S> | [Class<S>, ...ConstructorParameters<Class<S>>]
-  config?: Config<State>
 }>) {
-  const singletnInstance = Array.isArray(singletn) ? singletn[0] : singletn
-  const params = Array.isArray(singletn) ? singletn.slice(1) : []
+  const [singletnInstance, params] = Array.isArray(singletn)
+    ? [singletn[0], singletn.slice(1)]
+    : [singletn, []]
 
   const instance = useRef(
     isIntanceOfSingletnState(singletnInstance)
@@ -39,14 +44,8 @@ export function SingletnProvider<State, S extends SingletnType<State>>({
       : createSingletnInstance(singletnInstance as Class<S>, ...params),
   )
 
-  const upperContext = useContext(SingletnContext)
-  const context = useRef(new Map(upperContext))
-
-  if (!context.current.has(singletnInstance)) {
-    context.current.set(singletnInstance, instance.current)
-  }
-
-  useSingletn(singletnInstance, config)
+  const parentContext = useContext(SingletnContext)
+  const context = useRef(new Map(parentContext).set(singletnInstance, instance.current))
 
   return <SingletnContext.Provider value={context.current}>{children}</SingletnContext.Provider>
 }
