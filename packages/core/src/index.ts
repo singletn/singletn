@@ -42,10 +42,7 @@ export const isIntanceOfSingletnState = <C extends SingletnType>(
 }
 
 /** @private */
-export const singletnsMap = new Map<
-  Class<SingletnType<any>> | [Class<SingletnType<any>>, string],
-  SingletnType<any>
->()
+export const singletnsMap = new Map<Class<SingletnType<any>>, SingletnType<any>>()
 
 export const createSingletnInstance = <C extends SingletnType>(
   c: Class<C>,
@@ -60,10 +57,6 @@ export const createSingletnInstance = <C extends SingletnType>(
   return cont
 }
 
-export const getSingletnKey = <C extends SingletnType>(
-  c: Class<C> | [Class<C>, ...ConstructorParameters<Class<C>>],
-): Class<C> | [Class<C>, string] => (Array.isArray(c) ? [c[0], JSON.stringify(c.slice(1))] : c)
-
 export const getSingletnContructorParams = <C extends SingletnType>(
   c: Class<C> | [Class<C>, ...ConstructorParameters<Class<C>>],
 ): [Class<C>, Array<any>] => (Array.isArray(c) ? [c[0], c.slice(1)] : [c, []])
@@ -71,17 +64,16 @@ export const getSingletnContructorParams = <C extends SingletnType>(
 export const findSingletn = <C extends SingletnType>(
   c: Class<C> | [Class<C>, ...ConstructorParameters<Class<C>>],
 ): C => {
-  const key = getSingletnKey(c)
   const [clazz, params] = getSingletnContructorParams(c)
 
-  if (!singletnsMap.has(key)) {
+  if (!singletnsMap.has(clazz)) {
     const singletn = createSingletnInstance(clazz, ...params)
-    singletnsMap.set(key, singletn)
+    singletnsMap.set(clazz, singletn)
 
     return singletn as C
   }
 
-  return singletnsMap.get(key)! as C
+  return singletnsMap.get(clazz)! as C
 }
 
 export const clearSingletns = () => {

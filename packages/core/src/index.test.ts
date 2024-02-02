@@ -1,11 +1,4 @@
-import {
-  getSingletn,
-  singletnsMap,
-  deleteSingletn,
-  SingletnState,
-  findSingletn,
-  getSingletnKey,
-} from '.'
+import { getSingletn, singletnsMap, deleteSingletn, SingletnState, findSingletn } from '.'
 
 describe('@singletn/core tests', () => {
   beforeAll(() => {
@@ -56,12 +49,10 @@ describe('@singletn/core tests', () => {
     const cont = getSingletn(Test)
     getSingletn(Test2)
 
-    const key = getSingletnKey(Test)
-
-    expect(singletnsMap.get(key)).not.toBeUndefined()
+    expect(singletnsMap.get(Test)).not.toBeUndefined()
 
     deleteSingletn(cont)
 
-    expect(singletnsMap.get(getSingletnKey(key))).toBeUndefined()
+    expect(singletnsMap.get(Test)).toBeUndefined()
   })
 })
