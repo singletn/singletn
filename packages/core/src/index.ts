@@ -30,8 +30,8 @@ export interface SingletnType<T = any> {
 }
 
 export const isIntanceOfSingletnState = <C extends SingletnType>(
-  singletn: C | Class<C> | [Class<C>, ...ConstructorParameters<Class<C>>],
-): boolean => {
+  singletn: SingletnType | C | Class<C> | [Class<C>, ...ConstructorParameters<Class<C>>],
+): singletn is SingletnType => {
   const sngltn = singletn as SingletnType
 
   return (
@@ -57,26 +57,29 @@ export const createSingletnInstance = <C extends SingletnType>(
   return cont
 }
 
+export const getSingletnContructorParams = <C extends SingletnType>(
+  c: Class<C> | [Class<C>, ...ConstructorParameters<Class<C>>],
+): [Class<C>, Array<any>] => (Array.isArray(c) ? [c[0], c.slice(1)] : [c, []])
+
 export const findSingletn = <C extends SingletnType>(
   c: Class<C> | [Class<C>, ...ConstructorParameters<Class<C>>],
 ): C => {
-  const clazz = Array.isArray(c) ? c[0] : c
-  const params = Array.isArray(c) ? c.slice(1) : []
+  const [clazz, params] = getSingletnContructorParams(c)
 
   if (!singletnsMap.has(clazz)) {
-    const cont = createSingletnInstance(clazz, ...params)
-    singletnsMap.set(clazz, cont)
+    const singletn = createSingletnInstance(clazz, ...params)
+    singletnsMap.set(clazz, singletn)
+
+    return singletn as C
   }
 
   return singletnsMap.get(clazz)! as C
 }
 
 export const clearSingletns = () => {
-  Array.from(singletnsMap.keys()).forEach(key => {
-    const singletn = getSingletn(key)
-
+  for (const [, singletn] of singletnsMap) {
     destroySingletn(singletn)
-  })
+  }
 
   singletnsMap.clear()
 }
@@ -84,13 +87,11 @@ export const clearSingletns = () => {
 export const deleteSingletn = <C extends SingletnType>(singletn: C | Class<C>) => {
   const c = getSingletn(singletn)
 
-  Array.from(singletnsMap.keys()).forEach(key => {
-    const cnt = getSingletn(key)
-
-    if (cnt === c) {
+  for (const [key, singletnInstance] of singletnsMap) {
+    if (singletnInstance === singletn) {
       singletnsMap.delete(key)
     }
-  })
+  }
 
   destroySingletn(c)
 }
