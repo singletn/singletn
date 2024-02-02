@@ -1,8 +1,13 @@
-import { SingletnType } from '@singletn/core'
-import React, { ReactNode, useState } from 'react'
+import { SingletnState, SingletnType } from '@singletn/core'
+import React, { FC, ReactNode, useState } from 'react'
 import { useSingletn } from './hooks/use-singletn'
 
-function Comp<State>({ fn, singletn }: { fn: () => ReactNode; singletn: SingletnType<State> }) {
+type CompProps<State> = {
+  fn: () => ReactNode
+  singletn: SingletnType<State>
+}
+
+function Comp<State>({ fn, singletn }: CompProps<State>) {
   const [resolved, setResolved] = useState(fn())
 
   useSingletn(singletn, {
@@ -10,12 +15,11 @@ function Comp<State>({ fn, singletn }: { fn: () => ReactNode; singletn: Singletn
     onUpdate: () => setResolved(fn()),
   })
 
-  return <>{resolved}</>
+  return (resolved ?? null) as React.ReactElement
 }
 
-export function asSignal<State>(
-  fn: (...args: Array<any>) => ReactNode,
-  singletn: SingletnType<State>,
-) {
-  return (...args: Array<any>) => <Comp fn={() => fn(...args)} singletn={singletn} />
+export class SingletnSignalState<State> extends SingletnState<State> {
+  asSignal = (fn: (...args: Array<any>) => ReactNode) => (...args: Array<any>) => (
+    <Comp fn={() => fn(...args)} singletn={this} />
+  )
 }
